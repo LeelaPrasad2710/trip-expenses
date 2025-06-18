@@ -6,10 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 const ManageTrips = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   // Load trips from backend
   useEffect(() => {
-    fetch("http://localhost:4000/trips")
+    fetch(`${API_BASE}/trips`)
       .then((res) => res.json())
       .then(setTrips)
       .catch((err) => console.error("Failed to load trips:", err));
@@ -21,7 +22,7 @@ const ManageTrips = () => {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:4000/trips/${tripId}`, {
+      const res = await fetch(`${API_BASE}/trips/${tripId}`, {
         method: "DELETE",
       });
 

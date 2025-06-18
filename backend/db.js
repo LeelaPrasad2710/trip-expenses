@@ -1,10 +1,21 @@
+// import pkg from 'pg';
+// const { Pool } = pkg;
+
+// console.log("🔧 Connecting with DB URL:", process.env.DATABASE_URL);
+
+// export const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+//   ssl: true
+// });
+import dotenv from "dotenv";
+dotenv.config();
+
 import pkg from 'pg';
 const { Pool } = pkg;
 
+console.log("🔧 Connecting with DB URL:", process.env.DATABASE_URL);
+
 export const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'Personal',
-  password: 'Thar@22172088',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
 });

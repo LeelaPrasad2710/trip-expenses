@@ -2,10 +2,10 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB9IUlr4FlgB6hunIsedJFeCVfhE6JDVUc",
-  authDomain: "trip-tracker-b4a11.firebaseapp.com",
-  projectId: "trip-tracker-b4a11",
-  appId: "1:243770727727:web:df633bd8857b7a407e15da"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

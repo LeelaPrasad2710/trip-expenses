@@ -32,7 +32,9 @@ const CreateTrip = () => {
   useEffect(() => {
     const fetchTrip = async () => {
       if (isEditMode && paramTripId) {
-        const res = await fetch(`http://localhost:4000/trips/${paramTripId}`);
+        // const res = await fetch(`http://localhost:4000/trips/${paramTripId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/trips/${paramTripId}`);
+
         const data = await res.json();
   
         setTripId(data.trip_id);

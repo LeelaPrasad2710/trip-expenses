@@ -122,5 +122,4 @@ return (
   </div>
 );
 
-
 export default ManageTrips;

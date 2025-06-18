@@ -140,7 +140,7 @@ const TrackExpenses = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:4000/trips")
+    fetch(`${import.meta.env.VITE_API_URL}/trips`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched Trips from DB:", data); // ✅ Step 1 check

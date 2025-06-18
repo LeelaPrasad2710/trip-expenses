@@ -17,6 +17,7 @@ const CreateTrip = () => {
   const isEditMode = !!paramTripId;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const [tripId, setTripId] = useState("");
   const [tripName, setTripName] = useState("");
@@ -48,7 +49,7 @@ const CreateTrip = () => {
         setExpenseTypeOptions(data.expense_type_options || {});
         setMembers(data.members || [""]);
       } else {
-        const res = await fetch("http://localhost:4000/trips");
+        const res = await fetch(`${API_BASE}/trips`);
         const trips = await res.json();
         const lastId = trips
           .map((trip: any) => trip.trip_id)
@@ -63,35 +64,7 @@ const CreateTrip = () => {
   
     fetchTrip();
   }, [isEditMode, paramTripId]);
-  
-  
-  // useEffect(() => {
-  //   const trips = JSON.parse(localStorage.getItem("tripTemplates") || "[]");
-  //   if (isEditMode) {
-  //     const trip = trips.find((t: any) => t.tripId === paramTripId);
-  //     if (trip) {
-  //       setTripId(trip.tripId);
-  //       setTripName(trip.tripName);
-  //       setStartDate(new Date(trip.startDate));
-  //       setEndDate(new Date(trip.endDate));
-  //       setBudget(trip.budget.toString());
-  //       setMoneyHandler(trip.moneyHandler);
-  //       setLocation(trip.location);
-  //       setExpenseTypes(trip.expenseTypes || [""]);
-  //       setExpenseTypeOptions(trip.expenseTypeOptions || {});
-  //       setMembers(trip.members || [""]);
-  //     }
-  //   } else {
-  //     const lastId = trips
-  //       .map((trip: any) => trip.tripId)
-  //       .filter((id: string) => /^TRIP-\d{3}$/.test(id))
-  //       .map((id: string) => parseInt(id.split("-")[1], 10))
-  //       .sort((a, b) => b - a)[0] || 0;
 
-  //     const nextId = String(lastId + 1).padStart(3, "0");
-  //     setTripId(`TRIP-${nextId}`);
-  //   }
-  // }, [isEditMode, paramTripId]);
 
   const addExpenseType = () => {
     setExpenseTypes([...expenseTypes, ""]);
@@ -195,8 +168,8 @@ const CreateTrip = () => {
     };
   
     try {
-      const response = await fetch(
-        `http://localhost:4000/trips${isEditMode ? `/${tripId}` : ""}`,
+    const response = await fetch(
+      `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
         {
           method: isEditMode ? "PUT" : "POST",
           headers: {

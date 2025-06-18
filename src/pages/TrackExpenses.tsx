@@ -63,6 +63,7 @@ const TrackExpenses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const [tripTemplates, setTripTemplates] = useState<TripTemplate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -168,7 +169,7 @@ const TrackExpenses = () => {
 
   useEffect(() => {
     if (selectedTripId) {
-      fetch(`http://localhost:4000/expenses?tripId=${selectedTripId}`)
+      fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`)
         .then(res => res.json())
         .then(data => {
           console.log("Fetched expenses for trip:", data); // ✅ Step 3 check
@@ -256,7 +257,7 @@ const TrackExpenses = () => {
 
     console.log("Submitting Expense Payload:", newExp); // ✅ Debug log
 
-    fetch("http://localhost:4000/expenses", {
+    fetch(`${API_BASE}/expenses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newExp),
@@ -301,7 +302,7 @@ const TrackExpenses = () => {
 
 
   const deleteExpense = (id: string) => {
-    fetch(`http://localhost:4000/expenses/${id}`, { method: "DELETE" })
+    fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" })
       .then(() => {
         toast({ title: "Deleted", description: "Expense deleted" });
         setExpenses(prev => prev.filter(e => e.id !== id));

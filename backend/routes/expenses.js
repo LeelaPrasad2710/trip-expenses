@@ -67,14 +67,73 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-
-
-
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   await pool.query("DELETE FROM trip_expenses WHERE id = $1", [id]);
   res.json({ message: "Deleted" });
 });
+
+// ✅ UPDATE expense by ID
+router.put("/:id", async (req, res) => {
+  try {
+    console.log("🟡 PUT /expenses/:id called");
+
+    const {
+      trip_id,
+      trip_name,
+      date,
+      expense_type,
+      expense_option,
+      description,
+      location,
+      amount,
+      member_amounts,
+      created_at,
+      created_by
+    } = req.body;
+
+    const query = `
+      UPDATE trip_expenses SET
+        trip_id = $1,
+        trip_name = $2,
+        date = $3::date,
+        expense_type = $4,
+        expense_option = $5,
+        description = $6,
+        location = $7,
+        amount = $8::numeric,
+        member_amounts = $9::jsonb,
+        created_at = $10::timestamp,
+        created_by = $11
+      WHERE id = $12
+      RETURNING *;
+    `;
+
+    const values = [
+      trip_id,
+      trip_name,
+      date.split("T")[0],
+      expense_type,
+      expense_option,
+      description,
+      location,
+      amount,
+      JSON.stringify(member_amounts),
+      created_at,
+      created_by,
+      req.params.id
+    ];
+
+    const result = await pool.query(query, values);
+
+    console.log("✅ Updated expense:", result.rows[0]);
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ Error in PUT /expenses/:id:", err.stack || err.message);
+    res.status(500).json({ error: err.message || "Unknown error" });
+  }
+});
+
 
 export default router;

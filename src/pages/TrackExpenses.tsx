@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; 
+import autoTable from "jspdf-autotable";
 import { useAuth } from "@/context/AuthContext";
 import Footer from "@/components/ui/Footer";
 import { useLocation as usePageLocation } from "react-router-dom";
@@ -85,6 +85,7 @@ const TrackExpenses = () => {
   const [memberAmounts, setMemberAmounts] = useState<Record<string, number>>({});
   const [selectedMembersForSplit, setSelectedMembersForSplit] = useState<string[]>([]);
   const [showMemberSelection, setShowMemberSelection] = useState(false);
+  const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
 
   const toCamelTrip = (t: any): TripTemplate => ({
     tripId: t.trip_id,
@@ -315,8 +316,13 @@ const TrackExpenses = () => {
       created_by: user?.displayName || user?.email || "anonymous",
     };
 
-    fetch(`${API_BASE}/expenses`, {
-      method: "POST",
+    // fetch(`${API_BASE}/expenses`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(newExp),
+    // })
+    fetch(`${API_BASE}/expenses${editExpenseId ? `/${editExpenseId}` : ""}`, {
+      method: editExpenseId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newExp),
     })
@@ -335,15 +341,40 @@ const TrackExpenses = () => {
         });
 
         const expense = toCamelExpense(inserted);
-        setExpenses(prev => [...prev, expense]);
 
+
+        // setExpenses(prev => [...prev, expense]);
+
+        // const time = new Date().toLocaleString();
+        // const isSplitCustom = selectedMembersForSplit.length > 0;
+        // const logEntry = `🟢 ${user?.displayName || "Someone"} added expense on ${time}\n` +
+        //   `Type: ${expenseType}, Total: ₹${total}\n` +
+        //   `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ") : "false"}`;
+
+        // setActivityLogs(prev => [...prev, logEntry]);
+
+          // ✅ Update expenses array
+        setExpenses(prev => {
+          return editExpenseId
+            ? prev.map(e => (e.id === expense.id ? expense : e))
+            : [...prev, expense];
+        });
+
+        // ✅ Log activity once
+        const action = editExpenseId ? "edited" : "added";
         const time = new Date().toLocaleString();
         const isSplitCustom = selectedMembersForSplit.length > 0;
-        const logEntry = `🟢 ${user?.displayName || "Someone"} added expense on ${time}\n` +
+        const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense on ${time}\n` +
           `Type: ${expenseType}, Total: ₹${total}\n` +
-          `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ") : "false"}`;
-
+          `Split for all: ${!isSplitCustom}, Split for custom: ${
+            isSplitCustom
+              ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
+              : "false"
+          }`;
         setActivityLogs(prev => [...prev, logEntry]);
+
+        // ✅ Reset edit mode
+        setEditExpenseId(null);
 
         setExpenseDate(undefined);
         setExpenseType("");
@@ -372,28 +403,29 @@ const TrackExpenses = () => {
       });
   };
 
-
-  // const deleteExpense = (id: string) => {
-  //   fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" })
-  //     .then(() => {
-  //       toast({ title: "Deleted", description: "Expense deleted" });
-  //       setExpenses(prev => prev.filter(e => e.id !== id));
-  //     });
-  // };
-
   const deleteExpense = (id: string) => {
     const exp = expenses.find(e => e.id === id);
     fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" })
       .then(() => {
         toast({ title: "Deleted", description: "Expense deleted" });
         setExpenses(prev => prev.filter(e => e.id !== id));
-  
-        // 📝 Add to activity logs
+
         const time = new Date().toLocaleString();
         const log = `🔴 ${user?.displayName || "Someone"} deleted expense on ${time}\n` +
           `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
         setActivityLogs(prev => [...prev, log]);
       });
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditExpenseId(expense.id);
+    setExpenseDate(new Date(expense.date));
+    setExpenseType(expense.expenseType);
+    setExpenseOption(expense.expenseOption || "");
+    setDescription(expense.description || "");
+    setLocation(expense.location || "");
+    setAmount(expense.amount.toString());
+    setMemberAmounts({ ...expense.memberAmounts });
   };
   
 
@@ -773,6 +805,14 @@ const TrackExpenses = () => {
                                 ))}
                                 <TableCell>{expense.createdBy || "N/A"}</TableCell>
                                 <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditExpense(expense)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  >
+                                    Edit
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="sm"

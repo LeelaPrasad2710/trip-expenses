@@ -60,6 +60,15 @@ interface Expense {
   createdBy: string;
 }
 
+interface TripLog {
+  id: string;
+  action: string;
+  message: string;
+  created_by: string;
+  timestamp: string;
+  split_details: Record<string, number> | null;
+}
+
 const TrackExpenses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -68,14 +77,12 @@ const TrackExpenses = () => {
   const pageLocation = usePageLocation();
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
-  const [activityLogs, setActivityLogs] = useState<string[]>([]);
-
+  const [activityLogs, setActivityLogs] = useState<TripLog[]>([]);
   const [tripTemplates, setTripTemplates] = useState<TripTemplate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [selectedTripId, setSelectedTripId] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<TripTemplate | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [expenseDate, setExpenseDate] = useState<Date>(new Date());
   const [expenseType, setExpenseType] = useState("");
   const [expenseOption, setExpenseOption] = useState("");
@@ -86,6 +93,7 @@ const TrackExpenses = () => {
   const [selectedMembersForSplit, setSelectedMembersForSplit] = useState<string[]>([]);
   const [showMemberSelection, setShowMemberSelection] = useState(false);
   const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
+  
 
   const toCamelTrip = (t: any): TripTemplate => ({
     tripId: t.trip_id,
@@ -199,6 +207,17 @@ const TrackExpenses = () => {
       setMemberAmounts({});
     }
   }, [selectedTripId, tripTemplates]);
+
+  useEffect(() => {
+    if (!selectedTripId) return;
+    fetch(`${API_BASE}/logs?tripId=${selectedTripId}`)
+      .then(res => res.json())
+      .then(setActivityLogs)
+      .catch(err => {
+        console.error("Failed to load logs:", err);
+        setActivityLogs([]);
+      });
+  }, [selectedTripId]);
 
   useEffect(() => {
     if (selectedTripId) {
@@ -341,19 +360,6 @@ const TrackExpenses = () => {
         });
 
         const expense = toCamelExpense(inserted);
-
-
-        // setExpenses(prev => [...prev, expense]);
-
-        // const time = new Date().toLocaleString();
-        // const isSplitCustom = selectedMembersForSplit.length > 0;
-        // const logEntry = `🟢 ${user?.displayName || "Someone"} added expense on ${time}\n` +
-        //   `Type: ${expenseType}, Total: ₹${total}\n` +
-        //   `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ") : "false"}`;
-
-        // setActivityLogs(prev => [...prev, logEntry]);
-
-          // ✅ Update expenses array
         setExpenses(prev => {
           return editExpenseId
             ? prev.map(e => (e.id === expense.id ? expense : e))
@@ -361,17 +367,52 @@ const TrackExpenses = () => {
         });
 
         // ✅ Log activity once
-        const action = editExpenseId ? "edited" : "added";
-        const time = new Date().toLocaleString();
+        // const action = editExpenseId ? "edited" : "added";
+        // const time = new Date().toLocaleString();
+        // const isSplitCustom = selectedMembersForSplit.length > 0;
+        // const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense on ${time}\n` +
+        //   `Type: ${expenseType}, Total: ₹${total}\n` +
+        //   `Split for all: ${!isSplitCustom}, Split for custom: ${
+        //     isSplitCustom
+        //       ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
+        //       : "false"
+        //   }`;
+        //   setActivityLogs(prev => [
+        //     ...prev,
+        //     {
+        //       id: `LOG-${Date.now()}`,
+        //       action: editExpenseId ? "edit" : "add", // or "delete"
+        //       message: logEntry,
+        //       created_by: user?.displayName || user?.email || "Unknown",
+        //       timestamp: new Date().toISOString(),
+        //       split_details: memberAmounts, // or exp?.memberAmounts if in delete
+        //     }
+        //   ]);
+
+        const action = editExpenseId ? "edit" : "add";
         const isSplitCustom = selectedMembersForSplit.length > 0;
-        const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense on ${time}\n` +
+        const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense\n` +
           `Type: ${expenseType}, Total: ₹${total}\n` +
           `Split for all: ${!isSplitCustom}, Split for custom: ${
             isSplitCustom
               ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
               : "false"
           }`;
-        setActivityLogs(prev => [...prev, logEntry]);
+  
+        fetch(`${API_BASE}/logs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: `LOG-${Date.now()}`,
+            trip_id: selectedTrip.tripId,
+            expense_id: expense.id,
+            action,
+            message: logEntry,
+            created_by: user?.displayName || user?.email || "Unknown",
+            split_details: memberAmounts,
+          }),
+        });
+          
 
         // ✅ Reset edit mode
         setEditExpenseId(null);
@@ -410,10 +451,24 @@ const TrackExpenses = () => {
         toast({ title: "Deleted", description: "Expense deleted" });
         setExpenses(prev => prev.filter(e => e.id !== id));
 
-        const time = new Date().toLocaleString();
-        const log = `🔴 ${user?.displayName || "Someone"} deleted expense on ${time}\n` +
-          `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
-        setActivityLogs(prev => [...prev, log]);
+        const logEntry = `🔴 ${user?.displayName || "Someone"} deleted expense\n` +
+        `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
+      
+      fetch(`${API_BASE}/logs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: `LOG-${Date.now()}`,
+          trip_id: selectedTrip?.tripId,
+          expense_id: exp?.id,
+          action: "delete",
+          message: logEntry,
+          created_by: user?.displayName || user?.email || "Unknown",
+          timestamp: new Date().toISOString(),
+          split_details: exp?.memberAmounts || null
+        })
+      });
+      
       });
   };
 
@@ -864,8 +919,20 @@ const TrackExpenses = () => {
             {activityLogs.length === 0 ? (
               <p className="italic text-gray-400">No activity yet.</p>
             ) : (
-              activityLogs.map((log, idx) => (
-                <li key={idx}>{log}</li>
+              activityLogs.map((log) => (
+                <li key={log.id}>
+                  {log.message}
+                  <div className="text-xs text-gray-500 mt-1">
+                    {log.created_by || "Unknown"} • {new Date(log.timestamp).toLocaleString()}
+                    {log.split_details && (
+                      <div className="mt-1">
+                        {Object.entries(log.split_details).map(([name, amt]) => (
+                          <div key={name} className="text-xs ml-2">🔹 {name}: ₹{amt}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </li>
               ))
             )}
           </ol>

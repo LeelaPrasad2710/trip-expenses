@@ -140,70 +140,16 @@ const TrackExpenses = () => {
     saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
   };
 
-
-  // const exportToPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.text("Trip Expenses", 14, 20);
-  //   doc.autoTable({
-  //     startY: 30,
-  //     head: [["Date", "Type", "Description", "Amount"]],
-  //     body: expenses.map(e => [e.date, e.expenseType, e.description, e.amount])
-  //   });
-  //   doc.save("trip_expenses.pdf");
-  // };
-
   const exportToPDF = () => {
-    console.log("Export PDF triggered");
-    if (!expenses.length) {
-      toast({
-        title: "Error",
-        description: "No expenses available to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-  
     const doc = new jsPDF();
     doc.text("Trip Expenses", 14, 20);
-  
-    // Prepare dynamic headers including member breakdown
-    const allMembers = selectedTrip?.members || [];
-    const head = [
-      "Date",
-      "Type",
-      "Option",
-      "Description",
-      "Location",
-      "Amount",
-      ...allMembers,
-      "Added By"
-    ];
-  
-    const body = expenses.map(e => {
-      const memberData = allMembers.map(m => `₹${(e.memberAmounts[m] || 0).toFixed(2)}`);
-      return [
-        format(new Date(e.date), "PPP"), // formatted date
-        e.expenseType,
-        e.expenseOption || "N/A",
-        e.description || "-",
-        e.location || "-",
-        `₹${e.amount.toFixed(2)}`,
-        ...memberData,
-        e.createdBy || "N/A"
-      ];
-    });
-  
     doc.autoTable({
       startY: 30,
-      head: [head],
-      body: body,
-      styles: { fontSize: 8 },
-      theme: "striped"
+      head: [["Date", "Type", "Description", "Amount"]],
+      body: expenses.map(e => [e.date, e.expenseType, e.description, e.amount])
     });
-  
     doc.save("trip_expenses.pdf");
   };
-  
 
   const toCamelExpense = (e: any): Expense => ({
     id: e.id,

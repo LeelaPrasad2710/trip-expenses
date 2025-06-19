@@ -230,7 +230,7 @@ const TrackExpenses = () => {
     const option = expenseOption || "N/A";
 
     // Validate form fields
-    if (!selectedTrip || !expenseDate || !expenseType || !expenseOption || !amount) {
+    if (!selectedTrip || !expenseDate || !expenseType || !amount) {
       return toast({
         title: "Error",
         description: "Please fill in all required fields",

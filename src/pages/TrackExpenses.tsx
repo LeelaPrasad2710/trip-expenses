@@ -153,6 +153,7 @@ const TrackExpenses = () => {
   // };
 
   const exportToPDF = () => {
+    console.log("Export PDF triggered");
     if (!expenses.length) {
       toast({
         title: "Error",

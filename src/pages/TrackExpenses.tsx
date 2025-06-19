@@ -110,13 +110,6 @@ const TrackExpenses = () => {
     if (now > end) return "🔵 Finished";
   };
 
-  // const exportToExcel = () => {
-  //   const sheet = XLSX.utils.json_to_sheet(expenses);
-  //   const wb = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(wb, sheet, "Expenses");
-  //   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  //   saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
-  // };
   const exportToExcel = () => {
     const flattened = expenses.map((e) => {
       const flattenedEntry: any = {
@@ -132,22 +125,21 @@ const TrackExpenses = () => {
         createdAt: e.createdAt,
         createdBy: e.createdBy,
       };
-  
-      // Spread memberAmounts into individual columns
+
       for (const member in e.memberAmounts) {
-        flattenedEntry[`Amount - ${member}`] = e.memberAmounts[member];
+        flattenedEntry[`${member}`] = e.memberAmounts[member];
       }
-  
+
       return flattenedEntry;
     });
-  
+
     const sheet = XLSX.utils.json_to_sheet(flattened);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, sheet, "Expenses");
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
   };
-  
+
 
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -336,7 +328,7 @@ const TrackExpenses = () => {
       .then(inserted => {
         toast({
           title: "Success!",
-          description: "Expense saved" ,
+          description: "Expense saved",
           variant: "default",
           className: "bg-green-500 text-white",
         });
@@ -480,12 +472,31 @@ const TrackExpenses = () => {
                           <div key={item.type} className="flex justify-between items-center">
                             <span className="text-sm">{item.type}</span>
                             <div className="flex items-center space-x-2">
-                              <div className={`px-2 py-1 rounded text-white text-xs font-medium ${index === 0 ? 'bg-blue-500' :
+                              {/* <div className={`px-2 py-1 rounded text-white text-xs font-medium ${index === 0 ? 'bg-blue-500' :
                                 index === 1 ? 'bg-green-500' :
                                   index === 2 ? 'bg-red-500' :
                                     index === 3 ? 'bg-orange-500' : 'bg-gray-500'
                                 }`}>
                                 {item.percentage}%
+                              </div> */}
+                              <div key={item.type} className="flex justify-between items-center">
+                                <div className="text-sm font-medium">
+                                  {item.type}
+                                  <span className="ml-2 text-gray-600 text-xs">
+                                    ₹{item.amount.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className={`px-2 py-1 rounded text-white text-xs font-medium ${
+                                    index === 0 ? 'bg-blue-500' :
+                                    index === 1 ? 'bg-green-500' :
+                                    index === 2 ? 'bg-red-500' :
+                                    index === 3 ? 'bg-orange-500' : 'bg-gray-500'
+                                  }`}>
+                                    {item.percentage}%
+                                  </div>
+                                  <span className="text-sm font-medium">{item.count}</span>
+                                </div>
                               </div>
                               <span className="text-sm font-medium">{item.count}</span>
                             </div>
@@ -690,11 +701,10 @@ const TrackExpenses = () => {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${
-                          isSubmitting
+                        className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${isSubmitting
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
+                          }`}
                       >
                         {isSubmitting ? (
                           <>

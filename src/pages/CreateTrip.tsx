@@ -11,12 +11,14 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useParams } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const CreateTrip = () => {
   const { tripId: paramTripId } = useParams();
   const isEditMode = !!paramTripId;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const API_BASE = import.meta.env.VITE_API_URL;
 
   const [tripId, setTripId] = useState("");
@@ -134,69 +136,6 @@ const CreateTrip = () => {
     setMembers(updated);
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  
-  //   if (!tripName || !startDate || !endDate || !budget || !moneyHandler || !location) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Please fill in all required fields",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-  
-  //   const payload = {
-  //     trip_id: tripId,
-  //     trip_name: tripName,
-  //     start_date: startDate.toISOString().split("T")[0], // YYYY-MM-DD
-  //     end_date: endDate.toISOString().split("T")[0],
-  //     budget: parseFloat(budget),
-  //     money_handler: moneyHandler,
-  //     location,
-  //     expense_types: expenseTypes.filter((t) => t.trim() !== ""),
-  //     expense_type_options: Object.fromEntries(
-  //       Object.entries(expenseTypeOptions).map(([key, value]) => [
-  //         key,
-  //         value.filter((v) => v.trim() !== "")
-  //       ])
-  //     ),
-  //     members: members.filter((m) => m.trim() !== "")
-  //   };
-  
-  //   try {
-  //   const response = await fetch(
-  //     `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
-  //       {
-  //         method: isEditMode ? "PUT" : "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(payload),
-  //       }
-  //     );
-  
-  //     if (response.ok) {
-  //       toast({
-  //         title: isEditMode ? "Updated!" : "Success!",
-  //         description: isEditMode
-  //           ? "Trip template updated successfully"
-  //           : "Trip template created successfully",
-  //       });
-  //       navigate("/", { state: { forceReload: true } });
-  //     } else {
-  //       throw new Error("Failed to save trip");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to save trip template.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -209,7 +148,7 @@ const CreateTrip = () => {
       return;
     }
   
-    setIsSubmitting(true); // 🟡 Start loading state
+    setIsSubmitting(true);
     toast({
       title: "Submitting...",
       description: "Please wait while we save your trip template",
@@ -231,7 +170,8 @@ const CreateTrip = () => {
           value.filter((v) => v.trim() !== "")
         ])
       ),
-      members: members.filter((m) => m.trim() !== "")
+      members: members.filter((m) => m.trim() !== ""),
+      created_by: user?.displayName || user?.email || "unknown"
     };
   
     try {

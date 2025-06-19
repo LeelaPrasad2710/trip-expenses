@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const ManageTrips = () => {
   const { toast } = useToast();
@@ -11,6 +12,7 @@ const ManageTrips = () => {
   const [loadingTrips, setLoadingTrips] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -73,8 +75,9 @@ const ManageTrips = () => {
                 <div>
                   <h3 className="text-lg font-semibold">{trip.trip_name}</h3>
                   <p className="text-sm text-gray-500">{trip.trip_id}</p>
+                  <p className="text-sm text-gray-500">Created by: {trip.created_by || "N/A"}</p>
                 </div>
-                <div className="space-x-2">
+                {/* <div className="space-x-2">
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/edit-trip/${trip.trip_id}`)}
@@ -87,6 +90,26 @@ const ManageTrips = () => {
                   >
                     Delete
                   </Button>
+                </div> */}
+                <div className="space-x-2">
+                  {trip.created_by === user?.displayName || trip.created_by === user?.email ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/edit-trip/${trip.trip_id}`)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => deleteTrip(trip.trip_id)}
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">You can't edit/delete this</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

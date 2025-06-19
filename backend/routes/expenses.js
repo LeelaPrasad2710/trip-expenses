@@ -13,53 +13,6 @@ router.get("/", async (req, res) => {
   const { rows } = await pool.query(query, values);
   res.json(rows);
 });
-// routes/expenses.js
-// router.post("/", async (req, res) => {
-//   try {
-//     console.log("🔵 POST /expenses called");
-
-//     const {
-//       id, trip_id, trip_name, date,
-//       expense_type, expense_option, description,
-//       location, amount, member_amounts, created_at
-//     } = req.body;
-
-//     console.log("📥 Payload received:", req.body);
-
-//     const query = `
-//       INSERT INTO trip_expenses (
-//         id, trip_id, trip_name, date,
-//         expense_type, expense_option, description,
-//         location, amount, member_amounts, created_at
-//       ) VALUES (
-//         $1, $2, $3, $4::date, $5, $6, $7, $8, $9::numeric, $10::jsonb, $11::timestamp
-//       ) RETURNING *;
-//     `;
-
-//     const values = [
-//       id,
-//       trip_id,
-//       trip_name,
-//       date.split("T")[0], // ensure it's just the date part
-//       expense_type,
-//       expense_option,
-//       description,
-//       location,
-//       amount,
-//       JSON.stringify(member_amounts),
-//       created_at
-//     ];
-
-//     const result = await pool.query(query, values);
-
-//     console.log("✅ Inserted row:", result.rows[0]);
-
-//     res.status(201).json(result.rows[0]);
-//   } catch (err) {
-//     console.error("❌ Error in POST /expenses:", err.stack || err.message);
-//     res.status(500).json({ error: err.message || "Unknown error" });
-//   }
-// });
 
 router.post("/", async (req, res) => {
   try {

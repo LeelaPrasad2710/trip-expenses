@@ -19,7 +19,8 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   const {
     trip_id, trip_name, start_date, end_date, budget,
-    money_handler, location, expense_types, expense_type_options, members
+    money_handler, location, expense_types, expense_type_options, members,
+    created_by
   } = req.body;
 
   await pool.query(`
@@ -30,7 +31,8 @@ router.post("/", async (req, res) => {
     trip_id, trip_name, start_date, end_date, budget, money_handler, location,
     JSON.stringify(expense_types),
     JSON.stringify(expense_type_options),
-    JSON.stringify(members)
+    JSON.stringify(members),
+    created_by
   ]);
 
   res.json({ success: true });

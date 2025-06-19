@@ -859,7 +859,7 @@ const TrackExpenses = () => {
                                   </TableCell>
                                 ))}
                                 <TableCell>{expense.createdBy || "N/A"}</TableCell>
-                                <TableCell>
+                                {/* <TableCell>
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -876,7 +876,33 @@ const TrackExpenses = () => {
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
+                                </TableCell> */}
+
+                                <TableCell>
+                                  {expense.createdBy === user?.displayName || expense.createdBy === user?.email ? (
+                                    <>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditExpense(expense)}
+                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      >
+                                        Edit
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteExpense(expense.id)}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <span className="text-xs text-gray-400 italic">No access</span>
+                                  )}
                                 </TableCell>
+
                               </TableRow>
                             ))}
                             <TableRow className="bg-blue-50 font-bold">

@@ -101,7 +101,7 @@ const TrackExpenses = () => {
     const now = new Date();
     const start = new Date(trip.startDate);
     const end = new Date(trip.endDate);
-    const settled = trip.settled; // Optional field
+    const settled = trip.settled;
 
     if (settled) return "✅ Settled";
     if (now < start) return "🟡 Planned";
@@ -162,7 +162,7 @@ const TrackExpenses = () => {
   useEffect(() => {
     const trip = tripTemplates.find(t => t.tripId === selectedTripId);
     console.log("Selected Trip ID:", selectedTripId);
-    console.log("Resolved Selected Trip:", trip); // ✅ Step 2 check
+    console.log("Resolved Selected Trip:", trip);
     setSelectedTrip(trip || null);
 
     if (trip) {
@@ -179,7 +179,7 @@ const TrackExpenses = () => {
       fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`)
         .then(res => res.json())
         .then(data => {
-          console.log("Fetched expenses for trip:", data); // ✅ Step 3 check
+          console.log("Fetched expenses for trip:", data);
           setExpenses(data.map(toCamelExpense));
         })
         .catch((err) => {
@@ -229,7 +229,6 @@ const TrackExpenses = () => {
 
     const option = expenseOption || "N/A";
 
-    // Validate form fields
     if (!selectedTrip || !expenseDate || !expenseType || !amount) {
       return toast({
         title: "Error",

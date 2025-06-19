@@ -29,6 +29,7 @@ const CreateTrip = () => {
   const [expenseTypes, setExpenseTypes] = useState<string[]>([""]);
   const [expenseTypeOptions, setExpenseTypeOptions] = useState<Record<string, string[]>>({});
   const [members, setMembers] = useState<string[]>([""]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchTrip = async () => {
@@ -133,6 +134,69 @@ const CreateTrip = () => {
     setMembers(updated);
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  
+  //   if (!tripName || !startDate || !endDate || !budget || !moneyHandler || !location) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please fill in all required fields",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+  
+  //   const payload = {
+  //     trip_id: tripId,
+  //     trip_name: tripName,
+  //     start_date: startDate.toISOString().split("T")[0], // YYYY-MM-DD
+  //     end_date: endDate.toISOString().split("T")[0],
+  //     budget: parseFloat(budget),
+  //     money_handler: moneyHandler,
+  //     location,
+  //     expense_types: expenseTypes.filter((t) => t.trim() !== ""),
+  //     expense_type_options: Object.fromEntries(
+  //       Object.entries(expenseTypeOptions).map(([key, value]) => [
+  //         key,
+  //         value.filter((v) => v.trim() !== "")
+  //       ])
+  //     ),
+  //     members: members.filter((m) => m.trim() !== "")
+  //   };
+  
+  //   try {
+  //   const response = await fetch(
+  //     `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
+  //       {
+  //         method: isEditMode ? "PUT" : "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+  
+  //     if (response.ok) {
+  //       toast({
+  //         title: isEditMode ? "Updated!" : "Success!",
+  //         description: isEditMode
+  //           ? "Trip template updated successfully"
+  //           : "Trip template created successfully",
+  //       });
+  //       navigate("/", { state: { forceReload: true } });
+  //     } else {
+  //       throw new Error("Failed to save trip");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to save trip template.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -145,10 +209,17 @@ const CreateTrip = () => {
       return;
     }
   
+    setIsSubmitting(true); // 🟡 Start loading state
+    toast({
+      title: "Submitting...",
+      description: "Please wait while we save your trip template",
+      variant: "default",
+    });
+  
     const payload = {
       trip_id: tripId,
       trip_name: tripName,
-      start_date: startDate.toISOString().split("T")[0], // YYYY-MM-DD
+      start_date: startDate.toISOString().split("T")[0],
       end_date: endDate.toISOString().split("T")[0],
       budget: parseFloat(budget),
       money_handler: moneyHandler,
@@ -164,23 +235,23 @@ const CreateTrip = () => {
     };
   
     try {
-    const response = await fetch(
-      `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
+      const response = await fetch(
+        `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
         {
           method: isEditMode ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
   
       if (response.ok) {
         toast({
-          title: isEditMode ? "Updated!" : "Success!",
+          title: "✅ Success",
           description: isEditMode
             ? "Trip template updated successfully"
             : "Trip template created successfully",
+            variant: "default",
+            className: "bg-green-500 text-white",
         });
         navigate("/", { state: { forceReload: true } });
       } else {
@@ -193,8 +264,11 @@ const CreateTrip = () => {
         description: "Failed to save trip template.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false); // 🟢 Stop loading state
     }
   };
+  
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -463,13 +537,33 @@ const CreateTrip = () => {
 
               {/* Submit Button */}
               <div className="pt-6">
-                <Button 
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className={`w-full text-white font-semibold py-3 text-lg ${isSubmitting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Save className="mr-2 h-5 w-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-5 w-5" />
+                    {isEditMode ? "Update Trip Template" : "Create Trip Template"}
+                  </>
+                )}
+              </Button>
+                {/* <Button 
                   type="submit" 
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg"
                 >
                   <Save className="mr-2 h-5 w-5" />
                   Create Trip Template
-                </Button>
+                </Button> */}
               </div>
             </form>
           </CardContent>

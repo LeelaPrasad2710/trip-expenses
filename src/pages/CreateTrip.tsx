@@ -299,7 +299,6 @@ const CreateTrip = () => {
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Trip ID - Read Only */}
               <div>
                 <Label htmlFor="tripId" className="text-base font-semibold">Trip ID</Label>
                 <Input
@@ -310,7 +309,6 @@ const CreateTrip = () => {
                 />
               </div>
 
-              {/* Trip Name */}
               <div>
                 <Label htmlFor="tripName" className="text-base font-semibold">Trip Name *</Label>
                 <Input
@@ -323,7 +321,6 @@ const CreateTrip = () => {
                 />
               </div>
 
-              {/* Date Range */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label className="text-base font-semibold">Start Date *</Label>
@@ -381,7 +378,6 @@ const CreateTrip = () => {
                 </div>
               </div>
 
-              {/* Budget and Money Handler */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="budget" className="text-base font-semibold">Trip Budget *</Label>
@@ -397,7 +393,7 @@ const CreateTrip = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="moneyHandler" className="text-base font-semibold">Money Handler *</Label>
+                  <Label htmlFor="moneyHandler" className="text-base font-semibold">Trip Planner *</Label>
                   <Input
                     id="moneyHandler"
                     value={moneyHandler}
@@ -409,7 +405,6 @@ const CreateTrip = () => {
                 </div>
               </div>
 
-              {/* Location */}
               <div>
                 <Label htmlFor="location" className="text-base font-semibold">Trip Location *</Label>
                 <Input
@@ -422,7 +417,6 @@ const CreateTrip = () => {
                 />
               </div>
 
-              {/* Expense Types */}
               <div>
                 <Label className="text-base font-semibold">Trip Expense Types</Label>
                 <div className="mt-2 space-y-3">
@@ -459,7 +453,6 @@ const CreateTrip = () => {
                 </div>
               </div>
 
-              {/* Expense Type Options */}
               {expenseTypes.filter(type => type.trim() !== "").map((expenseType) => (
                 <div key={expenseType} className="bg-gray-50 p-4 rounded-lg">
                   <Label className="text-base font-semibold">Options for "{expenseType}"</Label>
@@ -498,7 +491,6 @@ const CreateTrip = () => {
                 </div>
               ))}
 
-              {/* Trip Members */}
               <div>
                 <Label className="text-base font-semibold">Trip Members</Label>
                 <div className="mt-2 space-y-3">
@@ -535,7 +527,6 @@ const CreateTrip = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="pt-6">
               <Button 
                 type="submit" 
@@ -557,13 +548,6 @@ const CreateTrip = () => {
                   </>
                 )}
               </Button>
-                {/* <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg"
-                >
-                  <Save className="mr-2 h-5 w-5" />
-                  Create Trip Template
-                </Button> */}
               </div>
             </form>
           </CardContent>

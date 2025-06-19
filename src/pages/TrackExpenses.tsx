@@ -29,6 +29,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useAuth } from "@/context/AuthContext";
 import Footer from "@/components/ui/Footer";
+import { useLocation as usePageLocation } from "react-router-dom";
 
 interface TripTemplate {
   tripId: string;
@@ -64,6 +65,7 @@ const TrackExpenses = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const API_BASE = import.meta.env.VITE_API_URL;
+  const pageLocation = usePageLocation();
 
   const [tripTemplates, setTripTemplates] = useState<TripTemplate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -150,7 +152,7 @@ const TrackExpenses = () => {
       .catch((err) => {
         console.error("Error fetching trips:", err);
       });
-  }, []);
+  }, [pageLocation.key]);
 
   useEffect(() => {
     const trip = tripTemplates.find(t => t.tripId === selectedTripId);
@@ -220,6 +222,8 @@ const TrackExpenses = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const option = expenseOption || "N/A";
+
     // Validate form fields
     if (!selectedTrip || !expenseDate || !expenseType || !expenseOption || !amount) {
       return toast({
@@ -246,7 +250,7 @@ const TrackExpenses = () => {
       trip_name: selectedTrip.tripName,
       date: expenseDate.toISOString(),
       expense_type: expenseType,
-      expense_option: expenseOption,
+      expense_option: option,
       description,
       location,
       amount: total,
@@ -440,7 +444,7 @@ const TrackExpenses = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <Label className="text-sm font-semibold">Expense Date *</Label>
+                      <Label className="text-sm font-semibold">Expense Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -483,7 +487,7 @@ const TrackExpenses = () => {
 
                     {expenseType && getExpenseOptions().length > 0 && (
                       <div>
-                        <Label className="text-sm font-semibold">Expense Option *</Label>
+                        <Label className="text-sm font-semibold">Expense Option</Label>
                         <Select value={expenseOption} onValueChange={setExpenseOption}>
                           <SelectTrigger className="mt-2">
                             <SelectValue placeholder="Select option" />
@@ -659,7 +663,7 @@ const TrackExpenses = () => {
                             <TableCell>{expense.expenseType}</TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{expense.expenseOption || expense.description}</div>
+                                <div className="font-medium">{expense.expenseOption || "N/A"}</div>
                                 {expense.description && expense.expenseOption && (
                                   <div className="text-xs text-gray-500">{expense.description}</div>
                                 )}

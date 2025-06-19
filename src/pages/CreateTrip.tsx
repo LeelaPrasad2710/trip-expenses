@@ -33,9 +33,7 @@ const CreateTrip = () => {
   useEffect(() => {
     const fetchTrip = async () => {
       if (isEditMode && paramTripId) {
-        // const res = await fetch(`http://localhost:4000/trips/${paramTripId}`);
         const res = await fetch(`${import.meta.env.VITE_API_URL}/trips/${paramTripId}`);
-
         const data = await res.json();
   
         setTripId(data.trip_id);
@@ -74,7 +72,6 @@ const CreateTrip = () => {
     if (expenseTypes.length > 1) {
       const removedType = expenseTypes[index];
       setExpenseTypes(expenseTypes.filter((_, i) => i !== index));
-      // Remove options for the deleted expense type
       if (removedType) {
         const newOptions = { ...expenseTypeOptions };
         delete newOptions[removedType];
@@ -89,7 +86,6 @@ const CreateTrip = () => {
     updated[index] = value;
     setExpenseTypes(updated);
 
-    // Update the options key if the expense type name changed
     if (oldValue && oldValue !== value && expenseTypeOptions[oldValue]) {
       const newOptions = { ...expenseTypeOptions };
       newOptions[value] = newOptions[oldValue];
@@ -186,7 +182,7 @@ const CreateTrip = () => {
             ? "Trip template updated successfully"
             : "Trip template created successfully",
         });
-        navigate("/");
+        navigate("/", { state: { forceReload: true } });
       } else {
         throw new Error("Failed to save trip");
       }
@@ -199,54 +195,6 @@ const CreateTrip = () => {
       });
     }
   };
-  
-
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  
-  //   if (!tripName || !startDate || !endDate || !budget || !moneyHandler || !location) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Please fill in all required fields",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-  
-  //   const tripData = {
-  //     tripId,
-  //     tripName,
-  //     startDate: startDate.toISOString(),
-  //     endDate: endDate.toISOString(),
-  //     budget: parseFloat(budget),
-  //     moneyHandler,
-  //     location,
-  //     expenseTypes: expenseTypes.filter(type => type.trim() !== ""),
-  //     expenseTypeOptions: Object.fromEntries(
-  //       Object.entries(expenseTypeOptions).map(([key, options]) => [
-  //         key, options.filter(option => option.trim() !== "")
-  //       ])
-  //     ),
-  //     members: members.filter(member => member.trim() !== ""),
-  //     createdAt: new Date().toISOString()
-  //   };
-  
-  //   const existingTrips = JSON.parse(localStorage.getItem("tripTemplates") || "[]");
-  //   const updatedTrips = isEditMode
-  //     ? existingTrips.map((t: any) => (t.tripId === tripId ? tripData : t))
-  //     : [...existingTrips, tripData];
-  
-  //   localStorage.setItem("tripTemplates", JSON.stringify(updatedTrips));
-  
-  //   toast({
-  //     title: isEditMode ? "Updated!" : "Success!",
-  //     description: isEditMode
-  //       ? "Trip template updated successfully"
-  //       : "Trip template created successfully",
-  //   });
-  
-  //   navigate("/");
-  // };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">

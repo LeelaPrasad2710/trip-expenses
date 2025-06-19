@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLocation } from "react-router-dom";
+
 
 const ManageTrips = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const API_BASE = import.meta.env.VITE_API_URL;
 
   // Load trips from backend
@@ -14,7 +17,7 @@ const ManageTrips = () => {
       .then((res) => res.json())
       .then(setTrips)
       .catch((err) => console.error("Failed to load trips:", err));
-  }, []);
+  }, [location.key]);
 
   // Delete a trip
   const deleteTrip = async (tripId: string) => {

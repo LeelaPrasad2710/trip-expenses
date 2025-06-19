@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable"; 
 import { useAuth } from "@/context/AuthContext";
 import Footer from "@/components/ui/Footer";
 import { useLocation as usePageLocation } from "react-router-dom";

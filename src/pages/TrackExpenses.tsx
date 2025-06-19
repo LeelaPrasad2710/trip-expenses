@@ -93,7 +93,7 @@ const TrackExpenses = () => {
   const [selectedMembersForSplit, setSelectedMembersForSplit] = useState<string[]>([]);
   const [showMemberSelection, setShowMemberSelection] = useState(false);
   const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
-  
+
 
   const toCamelTrip = (t: any): TripTemplate => ({
     tripId: t.trip_id,
@@ -335,11 +335,6 @@ const TrackExpenses = () => {
       created_by: user?.displayName || user?.email || "anonymous",
     };
 
-    // fetch(`${API_BASE}/expenses`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(newExp),
-    // })
     fetch(`${API_BASE}/expenses${editExpenseId ? `/${editExpenseId}` : ""}`, {
       method: editExpenseId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -366,39 +361,15 @@ const TrackExpenses = () => {
             : [...prev, expense];
         });
 
-        // ✅ Log activity once
-        // const action = editExpenseId ? "edited" : "added";
-        // const time = new Date().toLocaleString();
-        // const isSplitCustom = selectedMembersForSplit.length > 0;
-        // const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense on ${time}\n` +
-        //   `Type: ${expenseType}, Total: ₹${total}\n` +
-        //   `Split for all: ${!isSplitCustom}, Split for custom: ${
-        //     isSplitCustom
-        //       ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
-        //       : "false"
-        //   }`;
-        //   setActivityLogs(prev => [
-        //     ...prev,
-        //     {
-        //       id: `LOG-${Date.now()}`,
-        //       action: editExpenseId ? "edit" : "add", // or "delete"
-        //       message: logEntry,
-        //       created_by: user?.displayName || user?.email || "Unknown",
-        //       timestamp: new Date().toISOString(),
-        //       split_details: memberAmounts, // or exp?.memberAmounts if in delete
-        //     }
-        //   ]);
-
         const action = editExpenseId ? "edit" : "add";
         const isSplitCustom = selectedMembersForSplit.length > 0;
         const logEntry = `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense\n` +
           `Type: ${expenseType}, Total: ₹${total}\n` +
-          `Split for all: ${!isSplitCustom}, Split for custom: ${
-            isSplitCustom
-              ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
-              : "false"
+          `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom
+            ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ")
+            : "false"
           }`;
-  
+
         fetch(`${API_BASE}/logs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -412,9 +383,8 @@ const TrackExpenses = () => {
             split_details: memberAmounts,
           }),
         });
-          
 
-        // ✅ Reset edit mode
+
         setEditExpenseId(null);
 
         setExpenseDate(undefined);
@@ -452,23 +422,23 @@ const TrackExpenses = () => {
         setExpenses(prev => prev.filter(e => e.id !== id));
 
         const logEntry = `🔴 ${user?.displayName || "Someone"} deleted expense\n` +
-        `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
-      
-      fetch(`${API_BASE}/logs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: `LOG-${Date.now()}`,
-          trip_id: selectedTrip?.tripId,
-          expense_id: exp?.id,
-          action: "delete",
-          message: logEntry,
-          created_by: user?.displayName || user?.email || "Unknown",
-          timestamp: new Date().toISOString(),
-          split_details: exp?.memberAmounts || null
-        })
-      });
-      
+          `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
+
+        fetch(`${API_BASE}/logs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: `LOG-${Date.now()}`,
+            trip_id: selectedTrip?.tripId,
+            expense_id: exp?.id,
+            action: "delete",
+            message: logEntry,
+            created_by: user?.displayName || user?.email || "Unknown",
+            timestamp: new Date().toISOString(),
+            split_details: exp?.memberAmounts || null
+          })
+        });
+
       });
   };
 
@@ -482,7 +452,7 @@ const TrackExpenses = () => {
     setAmount(expense.amount.toString());
     setMemberAmounts({ ...expense.memberAmounts });
   };
-  
+
 
   const expenseBreakdown = selectedTrip ? selectedTrip.expenseTypes.map(type => {
     const typeExpenses = expenses.filter(exp =>
@@ -794,8 +764,8 @@ const TrackExpenses = () => {
                         type="submit"
                         disabled={isSubmitting}
                         className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${isSubmitting
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 text-white"
                           }`}
                       >
                         {isSubmitting ? (
@@ -859,25 +829,6 @@ const TrackExpenses = () => {
                                   </TableCell>
                                 ))}
                                 <TableCell>{expense.createdBy || "N/A"}</TableCell>
-                                {/* <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditExpense(expense)}
-                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => deleteExpense(expense.id)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TableCell> */}
-
                                 <TableCell>
                                   {expense.createdBy === user?.displayName || expense.createdBy === user?.email ? (
                                     <>

@@ -54,10 +54,8 @@ router.post("/", async (req, res) => {
       created_by
     } = req.body;
 
-    // Debug log to verify incoming payload
     console.log("🔵 Received trip payload:", req.body);
 
-    // Validate required fields (basic check)
     if (!trip_id || !trip_name || !start_date || !end_date || !budget || !created_by) {
       return res.status(400).json({ success: false, error: "Missing required fields" });
     }
@@ -87,8 +85,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-// UPDATE trip
 router.put("/:id", async (req, res) => {
   const {
     trip_name, start_date, end_date, budget,
@@ -113,7 +109,6 @@ router.put("/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// DELETE trip
 router.delete("/:id", async (req, res) => {
   await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [req.params.id]);
   res.json({ success: true });

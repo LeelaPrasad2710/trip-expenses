@@ -22,21 +22,17 @@ try {
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Routes
 app.use("/trips", tripRoutes);
 app.use("/expenses", expensesRouter);
 app.use("/logs", logsRouter);
 
-// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-// DB test
 pool.query("SELECT NOW()")
   .then(() => console.log("✅ Connected to PostgreSQL"))
   .catch((err) => {

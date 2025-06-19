@@ -3,7 +3,6 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
-// POST /logs → Add activity log
 router.post("/", async (req, res) => {
   try {
     const {
@@ -44,7 +43,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /logs?tripId=TRIP-001 → fetch logs by trip
 router.get("/", async (req, res) => {
     const { tripId } = req.query;
   

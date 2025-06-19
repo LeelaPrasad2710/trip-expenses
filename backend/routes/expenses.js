@@ -3,7 +3,6 @@ import { pool } from '../db.js';
 
 const router = express.Router();
 
-// GET all expenses or by tripId
 router.get("/", async (req, res) => {
   const { tripId } = req.query;
   const query = tripId

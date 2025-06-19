@@ -194,10 +194,25 @@ const TrackExpenses = () => {
 
   const splitAmountEqually = () => {
     if (!selectedTrip) return;
+    // const total = parseFloat(amount);
+    // const per = Math.round((total / selectedTrip.members.length) * 100) / 100;
+    // const obj: Record<string, number> = {};
+    // selectedTrip.members.forEach(m => { obj[m] = per; });
+    // setMemberAmounts(obj);
     const total = parseFloat(amount);
-    const per = Math.round((total / selectedTrip.members.length) * 100) / 100;
+    const members = selectedTrip.members;
+    const base = Math.floor((total / members.length) * 100) / 100;
+
     const obj: Record<string, number> = {};
-    selectedTrip.members.forEach(m => { obj[m] = per; });
+    members.forEach((m) => (obj[m] = base));
+
+    // Distribute remaining cents
+    let remaining = +(total - base * members.length).toFixed(2);
+    for (let i = 0; i < members.length && remaining > 0; i++) {
+      obj[members[i]] += 0.01;
+      remaining = +(remaining - 0.01).toFixed(2);
+    }
+
     setMemberAmounts(obj);
     toast({ title: "Amount Split", description: `₹${total} split equally` });
   };
@@ -205,11 +220,26 @@ const TrackExpenses = () => {
   const splitAmongSelectedMembers = () => {
     if (!selectedTrip || !selectedMembersForSplit.length) return;
     const total = parseFloat(amount);
-    const per = Math.round((total / selectedMembersForSplit.length) * 100) / 100;
+    // const per = Math.round((total / selectedMembersForSplit.length) * 100) / 100;
+    // const obj: Record<string, number> = {};
+    // selectedTrip.members.forEach(m => {
+    //   obj[m] = selectedMembersForSplit.includes(m) ? per : 0;
+    // });
+    const selected = selectedMembersForSplit;
+    const base = Math.floor((total / selected.length) * 100) / 100;
+
     const obj: Record<string, number> = {};
-    selectedTrip.members.forEach(m => {
-      obj[m] = selectedMembersForSplit.includes(m) ? per : 0;
-    });
+    selectedTrip.members.forEach((m) => (obj[m] = 0));
+    selected.forEach((m) => (obj[m] = base));
+
+    let remaining = +(total - base * selected.length).toFixed(2);
+    for (let i = 0; i < selected.length && remaining > 0; i++) {
+      obj[selected[i]] += 0.01;
+      remaining = +(remaining - 0.01).toFixed(2);
+    }
+
+    setMemberAmounts(obj);
+    setShowMemberSelection(false);
     setMemberAmounts(obj);
     setShowMemberSelection(false);
     toast({ title: "Amount Split", description: `₹${total} split among selected` });

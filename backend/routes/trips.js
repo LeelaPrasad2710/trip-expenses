@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
 
   await pool.query(`
     INSERT INTO trip_templates 
-    (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members)
+    (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members, created_by)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
   `, [
     trip_id, trip_name, start_date, end_date, budget, money_handler, location,

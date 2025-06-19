@@ -110,13 +110,44 @@ const TrackExpenses = () => {
     if (now > end) return "🔵 Finished";
   };
 
+  // const exportToExcel = () => {
+  //   const sheet = XLSX.utils.json_to_sheet(expenses);
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, sheet, "Expenses");
+  //   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  //   saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
+  // };
   const exportToExcel = () => {
-    const sheet = XLSX.utils.json_to_sheet(expenses);
+    const flattened = expenses.map((e) => {
+      const flattenedEntry: any = {
+        id: e.id,
+        tripId: e.tripId,
+        tripName: e.tripName,
+        date: e.date,
+        expenseType: e.expenseType,
+        expenseOption: e.expenseOption,
+        description: e.description,
+        location: e.location,
+        amount: e.amount,
+        createdAt: e.createdAt,
+        createdBy: e.createdBy,
+      };
+  
+      // Spread memberAmounts into individual columns
+      for (const member in e.memberAmounts) {
+        flattenedEntry[`Amount - ${member}`] = e.memberAmounts[member];
+      }
+  
+      return flattenedEntry;
+    });
+  
+    const sheet = XLSX.utils.json_to_sheet(flattened);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, sheet, "Expenses");
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
   };
+  
 
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -194,11 +225,6 @@ const TrackExpenses = () => {
 
   const splitAmountEqually = () => {
     if (!selectedTrip) return;
-    // const total = parseFloat(amount);
-    // const per = Math.round((total / selectedTrip.members.length) * 100) / 100;
-    // const obj: Record<string, number> = {};
-    // selectedTrip.members.forEach(m => { obj[m] = per; });
-    // setMemberAmounts(obj);
     const total = parseFloat(amount);
     const members = selectedTrip.members;
     const base = Math.floor((total / members.length) * 100) / 100;
@@ -206,7 +232,6 @@ const TrackExpenses = () => {
     const obj: Record<string, number> = {};
     members.forEach((m) => (obj[m] = base));
 
-    // Distribute remaining cents
     let remaining = +(total - base * members.length).toFixed(2);
     for (let i = 0; i < members.length && remaining > 0; i++) {
       obj[members[i]] += 0.01;
@@ -220,11 +245,6 @@ const TrackExpenses = () => {
   const splitAmongSelectedMembers = () => {
     if (!selectedTrip || !selectedMembersForSplit.length) return;
     const total = parseFloat(amount);
-    // const per = Math.round((total / selectedMembersForSplit.length) * 100) / 100;
-    // const obj: Record<string, number> = {};
-    // selectedTrip.members.forEach(m => {
-    //   obj[m] = selectedMembersForSplit.includes(m) ? per : 0;
-    // });
     const selected = selectedMembersForSplit;
     const base = Math.floor((total / selected.length) * 100) / 100;
 
@@ -321,10 +341,9 @@ const TrackExpenses = () => {
           className: "bg-green-500 text-white",
         });
 
-        const expense = toCamelExpense(inserted); // Convert keys to camelCase
+        const expense = toCamelExpense(inserted);
         setExpenses(prev => [...prev, expense]);
 
-        // Reset form fields
         setExpenseDate(undefined);
         setExpenseType("");
         setExpenseOption("");
@@ -332,7 +351,6 @@ const TrackExpenses = () => {
         setLocation("");
         setAmount("");
 
-        // Reset member amounts
         const resetAmounts: Record<string, number> = {};
         selectedTrip.members.forEach(member => {
           resetAmounts[member] = 0;
@@ -349,7 +367,7 @@ const TrackExpenses = () => {
         });
       })
       .finally(() => {
-        setIsSubmitting(false); // stop spinner
+        setIsSubmitting(false);
       });
   };
 
@@ -363,7 +381,6 @@ const TrackExpenses = () => {
   };
 
 
-  // Calculate expense breakdown by type
   const expenseBreakdown = selectedTrip ? selectedTrip.expenseTypes.map(type => {
     const typeExpenses = expenses.filter(exp =>
       exp.tripId === selectedTripId && exp.expenseType === type

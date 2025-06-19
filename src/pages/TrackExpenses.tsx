@@ -74,7 +74,7 @@ const TrackExpenses = () => {
   const [selectedTrip, setSelectedTrip] = useState<TripTemplate | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [expenseDate, setExpenseDate] = useState<Date>();
+  const [expenseDate, setExpenseDate] = useState<Date>(new Date());
   const [expenseType, setExpenseType] = useState("");
   const [expenseOption, setExpenseOption] = useState("");
   const [description, setDescription] = useState("");
@@ -462,7 +462,7 @@ const TrackExpenses = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid md:grid-cols-3 gap-4">
                         <div>
-                          <Label className="text-sm font-semibold">Expense Date</Label>
+                          <Label className="text-sm font-semibold">Expense Date *</Label>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -640,11 +640,6 @@ const TrackExpenses = () => {
                           Total assigned: ₹{Object.values(memberAmounts).reduce((sum, amt) => sum + amt, 0).toFixed(2)}
                         </div>
                       </div>
-
-                      {/* <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Expense
-                      </Button> */}
                       <Button
                         type="submit"
                         disabled={isSubmitting}

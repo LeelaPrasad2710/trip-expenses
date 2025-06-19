@@ -57,32 +57,12 @@ const ManageTrips = () => {
     }
   };
   
-
-  // const deleteTrip = async (tripId: string) => {
-  //   const confirmed = window.confirm("Are you sure you want to delete this trip?");
-  //   if (!confirmed) return;
-
-  //   try {
-  //     const res = await fetch(`${API_BASE}/trips/${tripId}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (res.ok) {
-  //       setTrips(trips.filter((t) => t.trip_id !== tripId));
-  //     } else {
-  //       console.error("Failed to delete");
-  //     }
-  //   } catch (error) {
-  //     console.error("Delete error:", error);
-  //   }
-  // };
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Manage Trips</h2>
 
       {loadingTrips ? (
-        <p className="text-gray-500 text-center text-lg">Loading trip data... please wait.</p>
+        <p className="text-gray-500 text-center text-lg">Loading trip templates data... please wait.</p>
       ) : trips.length === 0 ? (
         <p className="text-gray-600">No trips found.</p>
       ) : (

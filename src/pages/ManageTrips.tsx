@@ -19,7 +19,14 @@ const ManageTrips = () => {
     setLoadingTrips(true);
     fetch(`${API_BASE}/trips`)
       .then((res) => res.json())
-      .then(setTrips)
+      // .then(setTrips)
+      .then((data) => {
+        const formatted = data.map((trip: any) => ({
+          ...trip,
+          created_by: trip.created_by || "N/A"
+        }));
+        setTrips(formatted);
+      })
       .catch((err) => console.error("Failed to load trips:", err))
       .finally(() => setLoadingTrips(false));
   }, [location.key]);
@@ -75,7 +82,7 @@ const ManageTrips = () => {
                 <div>
                   <h3 className="text-lg font-semibold">{trip.trip_name}</h3>
                   <p className="text-sm text-gray-500">{trip.trip_id}</p>
-                  <p className="text-sm text-gray-500">Created by: {trip.created_by || "N/A"}</p>
+                  <p className="text-sm text-gray-500">Created by: {trip.created_by}</p>
                 </div>
                 {/* <div className="space-x-2">
                   <Button

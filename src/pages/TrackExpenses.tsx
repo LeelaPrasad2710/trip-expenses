@@ -141,16 +141,68 @@ const TrackExpenses = () => {
   };
 
 
+  // const exportToPDF = () => {
+  //   const doc = new jsPDF();
+  //   doc.text("Trip Expenses", 14, 20);
+  //   doc.autoTable({
+  //     startY: 30,
+  //     head: [["Date", "Type", "Description", "Amount"]],
+  //     body: expenses.map(e => [e.date, e.expenseType, e.description, e.amount])
+  //   });
+  //   doc.save("trip_expenses.pdf");
+  // };
+
   const exportToPDF = () => {
+    if (!expenses.length) {
+      toast({
+        title: "Error",
+        description: "No expenses available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+  
     const doc = new jsPDF();
     doc.text("Trip Expenses", 14, 20);
+  
+    // Prepare dynamic headers including member breakdown
+    const allMembers = selectedTrip?.members || [];
+    const head = [
+      "Date",
+      "Type",
+      "Option",
+      "Description",
+      "Location",
+      "Amount",
+      ...allMembers,
+      "Added By"
+    ];
+  
+    const body = expenses.map(e => {
+      const memberData = allMembers.map(m => `₹${(e.memberAmounts[m] || 0).toFixed(2)}`);
+      return [
+        format(new Date(e.date), "PPP"), // formatted date
+        e.expenseType,
+        e.expenseOption || "N/A",
+        e.description || "-",
+        e.location || "-",
+        `₹${e.amount.toFixed(2)}`,
+        ...memberData,
+        e.createdBy || "N/A"
+      ];
+    });
+  
     doc.autoTable({
       startY: 30,
-      head: [["Date", "Type", "Description", "Amount"]],
-      body: expenses.map(e => [e.date, e.expenseType, e.description, e.amount])
+      head: [head],
+      body: body,
+      styles: { fontSize: 8 },
+      theme: "striped"
     });
+  
     doc.save("trip_expenses.pdf");
   };
+  
 
   const toCamelExpense = (e: any): Expense => ({
     id: e.id,
@@ -479,7 +531,6 @@ const TrackExpenses = () => {
                                 }`}>
                                 {item.percentage}%
                               </div>
-                              
                               <span className="text-sm font-medium">₹{item.amount.toFixed(2)}</span>
                               <span className="text-sm font-medium">{item.count}</span>
                             </div>
@@ -566,13 +617,12 @@ const TrackExpenses = () => {
                       <div className="grid md:grid-cols-3 gap-4">
                         <div>
                           <Label htmlFor="description" className="text-sm font-semibold">Description</Label>
-                          <Textarea
+                          <Input
                             id="description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Add description..."
                             className="mt-2"
-                            rows={2}
                           />
                         </div>
 

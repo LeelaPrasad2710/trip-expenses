@@ -72,6 +72,7 @@ const TrackExpenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [selectedTripId, setSelectedTripId] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<TripTemplate | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [expenseDate, setExpenseDate] = useState<Date>();
   const [expenseType, setExpenseType] = useState("");
@@ -237,10 +238,18 @@ const TrackExpenses = () => {
       });
     }
 
+    setIsSubmitting(true); // start spinner
+    toast({
+      title: "Submitting...",
+      description: "Saving your expense entry. Please wait...",
+      variant: "default",
+    });
+
     const total = parseFloat(amount);
     const sumAssigned = Object.values(memberAmounts).reduce((s, v) => s + v, 0);
 
     if (Math.abs(sumAssigned - total) > 0.01) {
+      setIsSubmitting(false);
       return toast({
         title: "Error",
         description: "Assign amounts to all members correctly",
@@ -263,8 +272,6 @@ const TrackExpenses = () => {
       created_by: user?.displayName || user?.email || "anonymous",
     };
 
-    console.log("Submitting Expense Payload:", newExp); // ✅ Debug log
-
     fetch(`${API_BASE}/expenses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -277,7 +284,12 @@ const TrackExpenses = () => {
         return res.json();
       })
       .then(inserted => {
-        toast({ title: "Success!", description: "Expense saved" });
+        toast({
+          title: "Success!",
+          description: "Expense saved" ,
+          variant: "default",
+          className: "bg-green-500 text-white",
+        });
 
         const expense = toCamelExpense(inserted); // Convert keys to camelCase
         setExpenses(prev => [...prev, expense]);
@@ -305,6 +317,9 @@ const TrackExpenses = () => {
           description: "Failed to save expense",
           variant: "destructive",
         });
+      })
+      .finally(() => {
+        setIsSubmitting(false); // stop spinner
       });
   };
 
@@ -626,9 +641,30 @@ const TrackExpenses = () => {
                         </div>
                       </div>
 
-                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                      {/* <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Expense
+                      </Button> */}
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${
+                          isSubmitting
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                        }`}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Plus className="mr-2 h-4 w-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Expense
+                          </>
+                        )}
                       </Button>
                     </form>
                   </CardContent>

@@ -5,6 +5,7 @@ import tripRoutes from "./routes/trips.js";
 import expensesRouter from "./routes/expenses.js";
 import { pool } from "./db.js";
 import dotenv from "dotenv";
+import logsRouter from "./routes/logs.js";
 
 dotenv.config();
 console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL);
@@ -28,6 +29,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/trips", tripRoutes);
 app.use("/expenses", expensesRouter);
+app.use("/logs", logsRouter);
 
 // Start server
 app.listen(PORT, () => {

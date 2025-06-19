@@ -478,8 +478,9 @@ const TrackExpenses = () => {
                                     index === 3 ? 'bg-orange-500' : 'bg-gray-500'
                                 }`}>
                                 {item.percentage}%
-                                ₹{item.amount.toFixed(2)}
                               </div>
+                              
+                              <span className="text-sm font-medium">₹{item.amount.toFixed(2)}</span>
                               <span className="text-sm font-medium">{item.count}</span>
                             </div>
                           </div>

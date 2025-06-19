@@ -67,6 +67,8 @@ const TrackExpenses = () => {
   const API_BASE = import.meta.env.VITE_API_URL;
   const pageLocation = usePageLocation();
   const [loadingTrips, setLoadingTrips] = useState(true);
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [activityLogs, setActivityLogs] = useState<string[]>([]);
 
   const [tripTemplates, setTripTemplates] = useState<TripTemplate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -335,6 +337,14 @@ const TrackExpenses = () => {
         const expense = toCamelExpense(inserted);
         setExpenses(prev => [...prev, expense]);
 
+        const time = new Date().toLocaleString();
+        const isSplitCustom = selectedMembersForSplit.length > 0;
+        const logEntry = `🟢 ${user?.displayName || "Someone"} added expense on ${time}\n` +
+          `Type: ${expenseType}, Total: ₹${total}\n` +
+          `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom ? selectedMembersForSplit.map(m => `${m}: ₹${memberAmounts[m]}`).join(", ") : "false"}`;
+
+        setActivityLogs(prev => [...prev, logEntry]);
+
         setExpenseDate(undefined);
         setExpenseType("");
         setExpenseOption("");
@@ -363,14 +373,29 @@ const TrackExpenses = () => {
   };
 
 
+  // const deleteExpense = (id: string) => {
+  //   fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" })
+  //     .then(() => {
+  //       toast({ title: "Deleted", description: "Expense deleted" });
+  //       setExpenses(prev => prev.filter(e => e.id !== id));
+  //     });
+  // };
+
   const deleteExpense = (id: string) => {
+    const exp = expenses.find(e => e.id === id);
     fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" })
       .then(() => {
         toast({ title: "Deleted", description: "Expense deleted" });
         setExpenses(prev => prev.filter(e => e.id !== id));
+  
+        // 📝 Add to activity logs
+        const time = new Date().toLocaleString();
+        const log = `🔴 ${user?.displayName || "Someone"} deleted expense on ${time}\n` +
+          `Type: ${exp?.expenseType || "?"}, Amount: ₹${exp?.amount?.toFixed(2) || "?"}`;
+        setActivityLogs(prev => [...prev, log]);
       });
   };
-
+  
 
   const expenseBreakdown = selectedTrip ? selectedTrip.expenseTypes.map(type => {
     const typeExpenses = expenses.filter(exp =>
@@ -782,12 +807,30 @@ const TrackExpenses = () => {
                 </Card>
                 <Button onClick={exportToExcel}>Export Excel</Button>
                 <Button onClick={exportToPDF}>Export PDF</Button>
+                <Button onClick={() => setShowActivityDrawer(true)}>View Activities</Button>
               </>
             )}
           </>
         )}
       </main>
       <Footer />
+      {showActivityDrawer && (
+        <div className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl z-50 border-l border-gray-300 p-6 overflow-y-auto font-[Arial-ItalicMT]">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Activity Logs</h2>
+            <Button variant="ghost" onClick={() => setShowActivityDrawer(false)}>Close</Button>
+          </div>
+          <ol className="list-decimal pl-5 space-y-4 text-sm whitespace-pre-line text-gray-700">
+            {activityLogs.length === 0 ? (
+              <p className="italic text-gray-400">No activity yet.</p>
+            ) : (
+              activityLogs.map((log, idx) => (
+                <li key={idx}>{log}</li>
+              ))
+            )}
+          </ol>
+        </div>
+      )}
     </div>
   );
 };

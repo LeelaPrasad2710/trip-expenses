@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { ArrowLeft } from "lucide-react";
 
 const ManageTrips = () => {
   const { toast } = useToast();
@@ -19,7 +20,6 @@ const ManageTrips = () => {
     setLoadingTrips(true);
     fetch(`${API_BASE}/trips`)
       .then((res) => res.json())
-      // .then(setTrips)
       .then((data) => {
         const formatted = data.map((trip: any) => ({
           ...trip,
@@ -69,7 +69,9 @@ const ManageTrips = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Manage Trips</h2>
-
+      <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
       {loadingTrips ? (
         <p className="text-gray-500 text-center text-lg">Loading trip templates data... please wait.</p>
       ) : trips.length === 0 ? (
@@ -84,20 +86,6 @@ const ManageTrips = () => {
                   <p className="text-sm text-gray-500">{trip.trip_id}</p>
                   <p className="text-sm text-gray-500">Created by: {trip.created_by}</p>
                 </div>
-                {/* <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/edit-trip/${trip.trip_id}`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => deleteTrip(trip.trip_id)}
-                  >
-                    Delete
-                  </Button>
-                </div> */}
                 <div className="space-x-2">
                   {trip.created_by === user?.displayName || trip.created_by === user?.email ? (
                     <>

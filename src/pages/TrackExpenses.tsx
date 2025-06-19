@@ -472,31 +472,13 @@ const TrackExpenses = () => {
                           <div key={item.type} className="flex justify-between items-center">
                             <span className="text-sm">{item.type}</span>
                             <div className="flex items-center space-x-2">
-                              {/* <div className={`px-2 py-1 rounded text-white text-xs font-medium ${index === 0 ? 'bg-blue-500' :
+                              <div className={`px-2 py-1 rounded text-white text-xs font-medium ${index === 0 ? 'bg-blue-500' :
                                 index === 1 ? 'bg-green-500' :
                                   index === 2 ? 'bg-red-500' :
                                     index === 3 ? 'bg-orange-500' : 'bg-gray-500'
                                 }`}>
                                 {item.percentage}%
-                              </div> */}
-                              <div key={item.type} className="flex justify-between items-center">
-                                <div className="text-sm font-medium">
-                                  {item.type}
-                                  <span className="ml-2 text-gray-600 text-xs">
-                                    ₹{item.amount.toFixed(2)}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <div className={`px-2 py-1 rounded text-white text-xs font-medium ${
-                                    index === 0 ? 'bg-blue-500' :
-                                    index === 1 ? 'bg-green-500' :
-                                    index === 2 ? 'bg-red-500' :
-                                    index === 3 ? 'bg-orange-500' : 'bg-gray-500'
-                                  }`}>
-                                    {item.percentage}%
-                                  </div>
-                                  <span className="text-sm font-medium">{item.count}</span>
-                                </div>
+                                ₹{item.amount.toFixed(2)}
                               </div>
                               <span className="text-sm font-medium">{item.count}</span>
                             </div>

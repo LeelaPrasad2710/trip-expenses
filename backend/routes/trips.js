@@ -16,27 +16,77 @@ router.get("/:id", async (req, res) => {
 });
 
 // CREATE new trip
+// router.post("/", async (req, res) => {
+//   const {
+//     trip_id, trip_name, start_date, end_date, budget,
+//     money_handler, location, expense_types, expense_type_options, members,
+//     created_by
+//   } = req.body;
+
+//   await pool.query(`
+//     INSERT INTO trip_templates 
+//     (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members, created_by)
+//     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+//   `, [
+//     trip_id, trip_name, start_date, end_date, budget, money_handler, location,
+//     JSON.stringify(expense_types),
+//     JSON.stringify(expense_type_options),
+//     JSON.stringify(members),
+//     created_by
+//   ]);
+
+//   res.json({ success: true });
+// });
+
 router.post("/", async (req, res) => {
-  const {
-    trip_id, trip_name, start_date, end_date, budget,
-    money_handler, location, expense_types, expense_type_options, members,
-    created_by
-  } = req.body;
+  try {
+    const {
+      trip_id,
+      trip_name,
+      start_date,
+      end_date,
+      budget,
+      money_handler,
+      location,
+      expense_types,
+      expense_type_options,
+      members,
+      created_by
+    } = req.body;
 
-  await pool.query(`
-    INSERT INTO trip_templates 
-    (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members, created_by)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-  `, [
-    trip_id, trip_name, start_date, end_date, budget, money_handler, location,
-    JSON.stringify(expense_types),
-    JSON.stringify(expense_type_options),
-    JSON.stringify(members),
-    created_by
-  ]);
+    // Debug log to verify incoming payload
+    console.log("🔵 Received trip payload:", req.body);
 
-  res.json({ success: true });
+    // Validate required fields (basic check)
+    if (!trip_id || !trip_name || !start_date || !end_date || !budget || !created_by) {
+      return res.status(400).json({ success: false, error: "Missing required fields" });
+    }
+
+    await pool.query(`
+      INSERT INTO trip_templates 
+      (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `, [
+      trip_id,
+      trip_name,
+      start_date,
+      end_date,
+      budget,
+      money_handler,
+      location,
+      JSON.stringify(expense_types || []),
+      JSON.stringify(expense_type_options || {}),
+      JSON.stringify(members || []),
+      created_by
+    ]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("🔥 Trip insert failed:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
+
 
 // UPDATE trip
 router.put("/:id", async (req, res) => {

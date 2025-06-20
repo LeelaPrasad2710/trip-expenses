@@ -929,24 +929,30 @@ const TrackExpenses = () => {
                     )}
                   </CardContent>
                 </Card>
-                <Button 
+                <div>
+                  <Button 
                   onClick={exportToExcel}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   Export Excel
                 </Button>
+                </div>
+
 {/*                 <Button 
                   onClick={exportToPDF}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   Export PDF
                 </Button> */}
-                <Button 
+                <div>
+                  <Button 
                   onClick={() => setShowActivityDrawer(true)}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   View Activities
                 </Button>
+                </div>
+
               </>
             )}
           </>

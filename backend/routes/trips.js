@@ -15,29 +15,6 @@ router.get("/:id", async (req, res) => {
   res.json(rows[0]);
 });
 
-// CREATE new trip
-// router.post("/", async (req, res) => {
-//   const {
-//     trip_id, trip_name, start_date, end_date, budget,
-//     money_handler, location, expense_types, expense_type_options, members,
-//     created_by
-//   } = req.body;
-
-//   await pool.query(`
-//     INSERT INTO trip_templates 
-//     (trip_id, trip_name, start_date, end_date, budget, money_handler, location, expense_types, expense_type_options, members, created_by)
-//     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-//   `, [
-//     trip_id, trip_name, start_date, end_date, budget, money_handler, location,
-//     JSON.stringify(expense_types),
-//     JSON.stringify(expense_type_options),
-//     JSON.stringify(members),
-//     created_by
-//   ]);
-
-//   res.json({ success: true });
-// });
-
 router.post("/", async (req, res) => {
   try {
     const {
@@ -109,9 +86,29 @@ router.put("/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+// router.delete("/:id", async (req, res) => {
+//   await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [req.params.id]);
+//   res.json({ success: true });
+// });
 router.delete("/:id", async (req, res) => {
-  await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [req.params.id]);
-  res.json({ success: true });
+  const tripId = req.params.id;
+
+  try {
+    // Delete associated expenses
+    await pool.query("DELETE FROM trip_expenses WHERE trip_id = $1", [tripId]);
+
+    // Delete associated logs
+    await pool.query("DELETE FROM trip_logs WHERE trip_id = $1", [tripId]);
+
+    // Delete the trip itself
+    await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [tripId]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("🔥 Failed to delete trip and related data:", err.message);
+    res.status(500).json({ success: false, error: "Failed to delete trip fully" });
+  }
 });
+
 
 export default router;

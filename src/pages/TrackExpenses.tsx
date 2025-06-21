@@ -164,6 +164,109 @@ const TrackExpenses = () => {
     saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
   };
 
+  // const exportToPDF = () => {
+  //   if (!selectedTrip || expenses.length === 0) {
+  //     toast({
+  //       title: "Nothing to export",
+  //       description: "Please select a trip with expenses.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   const doc = new jsPDF({
+  //     orientation: "landscape",
+  //     unit: "mm",
+  //     format: "a4",
+  //   });
+
+  //   doc.setFontSize(14);
+  //   doc.text("Trip Expenses", 14, 15);
+
+  //   doc.setFontSize(10);
+  //   doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
+  //   doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
+  //   doc.text(`Total Expenses: Rs. ${totalAmount.toFixed(2)}`, 14, 34);
+  //   doc.text(`Remaining Budget: Rs. ${(selectedTrip.budget - totalAmount).toFixed(2)}`, 14, 40);
+
+  //   const expenseBreakdown = selectedTrip.expenseTypes.map(type => {
+  //     const typeExpenses = expenses.filter(exp => exp.expenseType === type);
+  //     const typeTotal = typeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  //     const percentage = totalAmount > 0 ? Math.round((typeTotal / totalAmount) * 100) : 0;
+  //     return {
+  //       type,
+  //       amount: typeTotal,
+  //       percentage,
+  //       count: typeExpenses.length
+  //     };
+  //   });
+
+  //   doc.setFont("helvetica", "bold");
+  //   doc.setFontSize(12);
+  //   doc.text("Overview", 14, 46);
+
+  //   autoTable(doc, {
+  //     startY: 50,
+  //     head: [["Type", "Percentage", "Amount", "Count"]],
+  //     body: expenseBreakdown.map(b => [
+  //       b.type,
+  //       `${b.percentage}%`,
+  //       `Rs. ${b.amount.toFixed(2)}`,
+  //       b.count.toString()
+  //     ]),
+  //     styles: {
+  //       fontSize: 9,
+  //     },
+  //     headStyles: {
+  //       fillColor: [52, 152, 219],
+  //       textColor: 255,
+  //       fontSize: 9,
+  //     },
+  //     columnStyles: {
+  //       0: { cellWidth: 40 },
+  //       1: { cellWidth: 30 },
+  //       2: { cellWidth: 35 },
+  //       3: { cellWidth: 25 },
+  //     },
+  //   });
+
+  //   autoTable(doc, {
+  //     startY: (doc as any).lastAutoTable.finalY + 10,
+  //     head: [[
+  //       "Date",
+  //       "Type",
+  //       "Description",
+  //       "Amount",
+  //       ...selectedTrip.members,
+  //       "Added By"
+  //     ]],
+  //     body: expenses.map(e => [
+  //       format(new Date(e.date), "MMM dd, yyyy"),
+  //       e.expenseType || "N/A",
+  //       e.description || "N/A",
+  //       `Rs. ${e.amount.toFixed(2)}`,
+  //       ...selectedTrip.members.map(m => `Rs. ${(e.memberAmounts[m] || 0).toFixed(2)}`),
+  //       e.createdBy || "N/A"
+  //     ]),
+  //     styles: {
+  //       fontSize: 9,
+  //     },
+  //     headStyles: {
+  //       fillColor: [41, 128, 185],
+  //       textColor: 255,
+  //       fontSize: 8,
+  //     },
+  //     columnStyles: {
+  //       0: { cellWidth: 25 }, // Date
+  //       1: { cellWidth: 20 }, // Type
+  //       2: { cellWidth: 30 }, // Description
+  //       3: { cellWidth: 25 }, // Amount
+  //     },
+  //   });
+
+  //   doc.save("trip_expenses.pdf");
+  // };
+
   const exportToPDF = () => {
     if (!selectedTrip || expenses.length === 0) {
       toast({
@@ -173,16 +276,16 @@ const TrackExpenses = () => {
       });
       return;
     }
-
+  
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
-
+  
     doc.setFontSize(14);
     doc.text("Trip Expenses", 14, 15);
-
+  
     doc.setFontSize(10);
     doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
     doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
@@ -200,11 +303,11 @@ const TrackExpenses = () => {
         count: typeExpenses.length
       };
     });
-
+  
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("Overview", 14, 46);
-
+  
     autoTable(doc, {
       startY: 50,
       head: [["Type", "Percentage", "Amount", "Count"]],
@@ -230,6 +333,19 @@ const TrackExpenses = () => {
       },
     });
 
+    const columnStyles: Record<number, any> = {
+      0: { cellWidth: 20 }, // Date
+      1: { cellWidth: 15 }, // Type
+      2: { cellWidth: 20 }, // Description
+      3: { cellWidth: 19 }, // Amount
+    };
+    
+    selectedTrip.members.forEach((_, index) => {
+      columnStyles[4 + index] = { cellWidth: 17 }; // Members columns
+    });
+    
+    columnStyles[4 + selectedTrip.members.length] = { cellWidth: 20 }; // "Added By"
+
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 10,
       head: [[
@@ -240,14 +356,36 @@ const TrackExpenses = () => {
         ...selectedTrip.members,
         "Added By"
       ]],
-      body: expenses.map(e => [
-        format(new Date(e.date), "MMM dd, yyyy"),
-        e.expenseType || "N/A",
-        e.description || "N/A",
-        `Rs. ${e.amount.toFixed(2)}`,
-        ...selectedTrip.members.map(m => `Rs. ${(e.memberAmounts[m] || 0).toFixed(2)}`),
-        e.createdBy || "N/A"
-      ]),
+      body: [
+        ...expenses.map(e => [
+          format(new Date(e.date), "MMM dd, yyyy"),
+          e.expenseType || "N/A",
+          e.description || "N/A",
+          `Rs. ${e.amount.toFixed(2)}`,
+          ...selectedTrip.members.map(m => `Rs. ${(e.memberAmounts[m] || 0).toFixed(2)}`),
+          e.createdBy || "N/A"
+        ]),
+        [
+          "", "", "Total Expenses", `Rs. ${totalAmount.toFixed(2)}`,
+          ...selectedTrip.members.map(m => {
+            const total = expenses.reduce((sum, e) => sum + (e.memberAmounts[m] || 0), 0);
+            return `Rs. ${total.toFixed(2)}`;
+          }),
+          ""
+        ],
+        [
+          "", "", "Settlement", `Rs. ${(selectedTrip.budget - totalAmount).toFixed(2)}`,
+          ...selectedTrip.members.map(m => {
+            const paid = expenses.reduce((sum, e) => sum + (e.memberAmounts[m] || 0), 0);
+            const share = selectedTrip.budget / selectedTrip.members.length;
+            const delta = +(share - paid).toFixed(2);
+            return delta >= 0
+              ? `+ Rs.   ${delta.toFixed(2)}`
+              : `- Rs.   ${Math.abs(delta).toFixed(2)}`;
+          }),
+          ""
+        ]
+      ],
       styles: {
         fontSize: 9,
       },
@@ -256,14 +394,8 @@ const TrackExpenses = () => {
         textColor: 255,
         fontSize: 8,
       },
-      columnStyles: {
-        0: { cellWidth: 25 }, // Date
-        1: { cellWidth: 20 }, // Type
-        2: { cellWidth: 30 }, // Description
-        3: { cellWidth: 25 }, // Amount
-      },
+      columnStyles
     });
-
     doc.save("trip_expenses.pdf");
   };
 
@@ -317,8 +449,8 @@ const TrackExpenses = () => {
     if (!selectedTripId) return;
 
     const trip = tripTemplates.find(t => t.tripId === selectedTripId);
-    setSelectedTrip(null); // Clear old trip
-    setTripDetailsLoading(true); // Start loading before fetches
+    setSelectedTrip(null);
+    setTripDetailsLoading(true);
 
     if (!trip) {
       setTripDetailsLoading(false);
@@ -348,35 +480,6 @@ const TrackExpenses = () => {
       });
 
   }, [selectedTripId, tripTemplates]);
-
-
-  // useEffect(() => {
-  //   if (!selectedTripId) return;
-  //   fetch(`${API_BASE}/logs?tripId=${selectedTripId}`)
-  //     .then(res => res.json())
-  //     .then(setActivityLogs)
-  //     .catch(err => {
-  //       console.error("Failed to load logs:", err);
-  //       setActivityLogs([]);
-  //     });
-  // }, [selectedTripId]);
-
-  // useEffect(() => {
-  //   if (selectedTripId) {
-  //     fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`)
-  //       .then(res => res.json())
-  //       .then(data => {
-  //         console.log("Fetched expenses for trip:", data);
-  //         setExpenses(data.map(toCamelExpense));
-  //       })
-  //       .catch((err) => {
-  //         console.error("Error loading expenses:", err);
-  //         setExpenses([]);
-  //       });
-  //   } else {
-  //     setExpenses([]);
-  //   }
-  // }, [selectedTripId]);
 
   const splitAmountEqually = () => {
     if (!selectedTrip) return;
@@ -664,7 +767,6 @@ const TrackExpenses = () => {
               <LoadingSpinner />
             ) : selectedTrip ? (
               <>
-                {/* Budget vs Spend + Overview */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader className="bg-blue-600 text-white">
@@ -705,9 +807,9 @@ const TrackExpenses = () => {
                             <span className="font-semibold text-sm text-gray-700">{item.type}</span>
                             <div className="flex items-center space-x-4">
                               <div className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0 ? 'bg-blue-500' :
-                                  index === 1 ? 'bg-green-500' :
-                                    index === 2 ? 'bg-red-500' :
-                                      index === 3 ? 'bg-orange-500' : 'bg-gray-500'
+                                index === 1 ? 'bg-green-500' :
+                                  index === 2 ? 'bg-red-500' :
+                                    index === 3 ? 'bg-orange-500' : 'bg-gray-500'
                                 }`}>
                                 {item.percentage}%
                               </div>
@@ -734,7 +836,6 @@ const TrackExpenses = () => {
                   </Card>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <Button onClick={() => setShowExpenseDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
                     + Add Expense
@@ -753,7 +854,6 @@ const TrackExpenses = () => {
                   </Button>
                 </div>
 
-                {/* Expense Table */}
                 <Card>
                   <CardHeader className="bg-blue-600 text-white">
                     <CardTitle>What are my expenses?</CardTitle>
@@ -863,238 +963,6 @@ const TrackExpenses = () => {
                 </Card>
               </>
             ) : null}
-
-            {/* {selectedTrip && (
-              <>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Budget vs Spend</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-4">
-                      <div>
-                        <Label className="text-sm text-gray-600">Total Budget</Label>
-                        <div className="bg-blue-50 border border-blue-200 p-3 rounded text-center">
-                          <span className="text-xl font-bold">₹{selectedTrip.budget.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-gray-600">Total Expenses</Label>
-                        <div className="bg-blue-100 border border-blue-300 p-3 rounded text-center">
-                          <span className="text-xl font-bold">₹{totalAmount.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-gray-600">Remaining Budget</Label>
-                        <div className={`border p-3 rounded text-center ${budgetRemaining >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                          <span className={`text-xl font-bold ${budgetRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            ₹{budgetRemaining.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="divide-y divide-gray-200">
-                        {expenseBreakdown.map((item, index) => (
-                          <div
-                            key={item.type}
-                            className="flex justify-between items-center py-2"
-                          >
-                            <span className="font-semibold text-sm text-gray-700">
-                              {item.type}
-                            </span>
-                            <div className="flex items-center space-x-4">
-                              <div
-                                className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0
-                                  ? 'bg-blue-500'
-                                  : index === 1
-                                    ? 'bg-green-500'
-                                    : index === 2
-                                      ? 'bg-red-500'
-                                      : index === 3
-                                        ? 'bg-orange-500'
-                                        : 'bg-gray-500'
-                                  }`}
-                              >
-                                {item.percentage}%
-                              </div>
-                              <span className="text-sm font-semibold text-right text-gray-800 w-[80px]">
-                                ₹{item.amount.toFixed(2)}
-                              </span>
-                              <span className="text-sm font-medium text-right text-gray-500 w-[40px]">
-                                {item.count}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {totalAmount > 0 && (
-                        <div className="mt-4 text-center">
-                          <div className="text-2xl font-bold text-gray-700">
-                            ₹{totalAmount.toFixed(0)}
-                          </div>
-                          <div className="text-sm text-gray-500">Total Expenses</div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
-                  <Button
-                      onClick={() => setShowExpenseDrawer(true)}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      + Add Expense
-                  </Button>
-                  <Button
-                      onClick={exportToExcel}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Export Excel
-                  </Button>
-                  <Button
-                      onClick={exportToPDF}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Export PDF
-                  </Button>
-                  <Button
-                      onClick={() => setShowActivityDrawer(true)}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      View Activities
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowSettlement(!showSettlement)}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    {showSettlement ? "Hide Settlement" : "Settle"}
-                </Button>
-                </div>
-
-                <Card>
-                  <CardHeader className="bg-blue-600 text-white">
-                    <CardTitle>What are my expenses?</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    {filteredExpenses.length === 0 ? (
-                      <p className="text-center text-gray-500 py-8">No expenses recorded yet</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50">
-                              <TableHead className="font-semibold">Date</TableHead>
-                              <TableHead className="font-semibold">Type</TableHead>
-                              <TableHead className="font-semibold">Description</TableHead>
-                              <TableHead className="font-semibold">Total Amount</TableHead>
-                              {selectedTrip.members.map((member) => (
-                                <TableHead key={member} className="font-semibold text-center">
-                                  {member}
-                                </TableHead>
-                              ))}
-                              <TableHead className="font-semibold">Add By</TableHead>
-                              <TableHead className="font-semibold">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredExpenses.map((expense) => (
-                              <TableRow key={expense.id}>
-                                <TableCell>{format(new Date(expense.date), "MMM dd, yyyy")}</TableCell>
-                                <TableCell>{expense.expenseType}</TableCell>
-                                <TableCell>
-                                  <div>
-                                    <div className="font-medium">{expense.expenseOption || "N/A"}</div>
-                                    {expense.description && expense.expenseOption && (
-                                      <div className="text-xs text-gray-500">{expense.description}</div>
-                                    )}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="font-bold">₹{expense.amount.toFixed(2)}</TableCell>
-                                {selectedTrip.members.map((member) => (
-                                  <TableCell key={member} className="text-center">
-                                    ₹{(expense.memberAmounts[member] || 0).toFixed(2)}
-                                  </TableCell>
-                                ))}
-                                <TableCell>{expense.createdBy || "N/A"}</TableCell>
-                                <TableCell>
-                                  {expense.createdBy === user?.displayName || expense.createdBy === user?.email ? (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEditExpense(expense)}
-                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                      >
-                                        Edit
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => deleteExpense(expense.id)}
-                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <span className="text-xs text-gray-400 italic">No access</span>
-                                  )}
-                                </TableCell>
-
-                              </TableRow>
-                            ))}
-                            <TableRow className="bg-blue-50 font-bold">
-                              <TableCell colSpan={3} className="text-right">Total Expenses</TableCell>
-                              <TableCell>₹{totalAmount.toFixed(2)}</TableCell>
-                              {selectedTrip.members.map((member) => {
-                                const memberTotal = filteredExpenses.reduce((sum, expense) =>
-                                  sum + (expense.memberAmounts[member] || 0), 0
-                                );
-                                return (
-                                  <TableCell key={member} className="text-center font-bold">
-                                    ₹{memberTotal.toFixed(2)}
-                                  </TableCell>
-                                );
-                              })}
-                              <TableCell></TableCell>
-                            </TableRow>
-                            {showSettlement && (
-                              <TableRow className="bg-yellow-50 font-semibold">
-                                <TableCell colSpan={3} className="text-right">Settlement</TableCell>
-                                <TableCell>₹{budgetRemaining.toFixed(2)}</TableCell>
-                                {selectedTrip.members.map((member, index) => {
-                                  const memberTotal = filteredExpenses.reduce(
-                                    (sum, exp) => sum + (exp.memberAmounts[member] || 0), 0
-                                  );
-                                  const share = selectedTrip.budget / selectedTrip.members.length;
-                                  const delta = +(share - memberTotal).toFixed(2);
-                                  return (
-                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-green-600" : "text-red-600"}`}>
-                                      {delta >= 0 ? `+₹${delta.toFixed(2)}` : `-₹${Math.abs(delta).toFixed(2)}`}
-                                    </TableCell>
-                                  );
-                                })}
-                                <TableCell></TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            )} */}
           </>
         )}
       </main>

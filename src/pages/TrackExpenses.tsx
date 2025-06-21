@@ -543,29 +543,46 @@ const TrackExpenses = () => {
                     </CardContent>
                   </Card>
 
-{/*                   <Card>
+                  <Card>
                     <CardHeader className="bg-blue-600 text-white">
                       <CardTitle>Where are my total expenses going?</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <div className="space-y-3">
+                      <div className="divide-y divide-gray-200">
                         {expenseBreakdown.map((item, index) => (
-                          <div key={item.type} className="flex justify-between items-center">
-                            <span className="text-sm">{item.type}</span>
-                            <div className="flex items-center space-x-2">
-                              <div className={`px-2 py-1 rounded text-white text-xs font-medium ${index === 0 ? 'bg-blue-500' :
-                                index === 1 ? 'bg-green-500' :
-                                  index === 2 ? 'bg-red-500' :
-                                    index === 3 ? 'bg-orange-500' : 'bg-gray-500'
-                                }`}>
+                          <div
+                            key={item.type}
+                            className="flex justify-between items-center py-2"
+                          >
+                            <span className="font-semibold text-sm text-gray-700">
+                              {item.type}
+                            </span>
+                            <div className="flex items-center space-x-4">
+                              <div
+                                className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0
+                                    ? 'bg-blue-500'
+                                    : index === 1
+                                      ? 'bg-green-500'
+                                      : index === 2
+                                        ? 'bg-red-500'
+                                        : index === 3
+                                          ? 'bg-orange-500'
+                                          : 'bg-gray-500'
+                                  }`}
+                              >
                                 {item.percentage}%
                               </div>
-                              <span className="text-sm font-medium">₹{item.amount.toFixed(2)}</span>
-                              <span className="text-sm font-medium">{item.count}</span>
+                              <span className="text-sm font-semibold text-right text-gray-800 w-[80px]">
+                                ₹{item.amount.toFixed(2)}
+                              </span>
+                              <span className="text-sm font-medium text-right text-gray-500 w-[40px]">
+                                {item.count}
+                              </span>
                             </div>
                           </div>
                         ))}
                       </div>
+
                       {totalAmount > 0 && (
                         <div className="mt-4 text-center">
                           <div className="text-2xl font-bold text-gray-700">
@@ -575,59 +592,7 @@ const TrackExpenses = () => {
                         </div>
                       )}
                     </CardContent>
-                  </Card> */}
-
-                  <Card>
-  <CardHeader className="bg-blue-600 text-white">
-    <CardTitle>Where are my total expenses going?</CardTitle>
-  </CardHeader>
-  <CardContent className="p-6">
-    <div className="divide-y divide-gray-200">
-      {expenseBreakdown.map((item, index) => (
-        <div
-          key={item.type}
-          className="flex justify-between items-center py-2"
-        >
-          <span className="font-semibold text-sm text-gray-700">
-            {item.type}
-          </span>
-          <div className="flex items-center space-x-4">
-            <div
-              className={`px-2 py-1 rounded text-white text-xs font-semibold ${
-                index === 0
-                  ? 'bg-blue-500'
-                  : index === 1
-                  ? 'bg-green-500'
-                  : index === 2
-                  ? 'bg-red-500'
-                  : index === 3
-                  ? 'bg-orange-500'
-                  : 'bg-gray-500'
-              }`}
-            >
-              {item.percentage}%
-            </div>
-            <span className="text-sm font-semibold text-right text-gray-800 w-[80px]">
-              ₹{item.amount.toFixed(2)}
-            </span>
-            <span className="text-sm font-medium text-right text-gray-500 w-[40px]">
-              {item.count}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {totalAmount > 0 && (
-      <div className="mt-4 text-center">
-        <div className="text-2xl font-bold text-gray-700">
-          ₹{totalAmount.toFixed(0)}
-        </div>
-        <div className="text-sm text-gray-500">Total Expenses</div>
-      </div>
-    )}
-  </CardContent>
-</Card>
+                  </Card>
                 </div>
 
                 <Card className="mb-6">
@@ -929,26 +894,24 @@ const TrackExpenses = () => {
                     )}
                   </CardContent>
                 </Card>
-                  <Button 
+                <Button 
                   onClick={exportToExcel}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   Export Excel
                 </Button>
-
-{/*                 <Button 
+                {/* <Button 
                   onClick={exportToPDF}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   Export PDF
                 </Button> */}
-                  <Button 
+                <Button 
                   onClick={() => setShowActivityDrawer(true)}
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                   View Activities
                 </Button>
-
               </>
             )}
           </>

@@ -520,7 +520,7 @@ const TrackExpenses = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>My Budget & Expenses</CardTitle>
+                      <CardTitle>Budget vs Spend</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
                       <div>
@@ -548,7 +548,7 @@ const TrackExpenses = () => {
 
                   <Card>
                     <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Overview of Expenses</CardTitle>
+                      <CardTitle>Overview</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
                       <div className="divide-y divide-gray-200">
@@ -598,7 +598,7 @@ const TrackExpenses = () => {
                   </Card>
                 </div>
 
-                <div>
+                {/* <div>
                 <Button
                   onClick={() => setShowExpenseDrawer(true)}
                   className="bg-blue-600 text-white hover:bg-blue-700"
@@ -623,213 +623,35 @@ const TrackExpenses = () => {
                   >
                   View Activities
                 </Button>
-                </div>
+                </div> */}
 
-                {/* <Card className="mb-6">
-                  <CardContent className="p-6">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <Label className="text-sm font-semibold">Expense Date *</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full mt-2 justify-start text-left font-normal",
-                                  !expenseDate && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {expenseDate ? format(expenseDate, "PPP") : "Pick date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={expenseDate}
-                                onSelect={setExpenseDate}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+<div className="flex space-x-4">
+  <Button
+    onClick={() => setShowExpenseDrawer(true)}
+    className="bg-blue-600 text-white hover:bg-blue-700"
+  >
+    + Add Expense
+  </Button>
+  <Button
+    onClick={exportToExcel}
+    className="bg-blue-600 text-white hover:bg-blue-700"
+  >
+    Export Excel
+  </Button>
+  <Button
+    onClick={exportToPDF}
+    className="bg-blue-600 text-white hover:bg-blue-700"
+  >
+    Export PDF
+  </Button>
+  <Button
+    onClick={() => setShowActivityDrawer(true)}
+    className="bg-blue-600 text-white hover:bg-blue-700"
+  >
+    View Activities
+  </Button>
+</div>
 
-                        <div>
-                          <Label className="text-sm font-semibold">Expense Type *</Label>
-                          <Select value={expenseType} onValueChange={setExpenseType}>
-                            <SelectTrigger className="mt-2">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {selectedTrip.expenseTypes.map((type, index) => (
-                                <SelectItem key={index} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {expenseType && getExpenseOptions().length > 0 && (
-                          <div>
-                            <Label className="text-sm font-semibold">Expense Option</Label>
-                            <Select value={expenseOption} onValueChange={setExpenseOption}>
-                              <SelectTrigger className="mt-2">
-                                <SelectValue placeholder="Select option" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {getExpenseOptions().map((option, index) => (
-                                  <SelectItem key={index} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="description" className="text-sm font-semibold">Description</Label>
-                          <Input
-                            id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Add description..."
-                            className="mt-2"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="location" className="text-sm font-semibold">Location</Label>
-                          <Input
-                            id="location"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Enter location"
-                            className="mt-2"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="amount" className="text-sm font-semibold">Total Amount *</Label>
-                          <div className="flex gap-2 mt-2">
-                            <Input
-                              id="amount"
-                              type="number"
-                              step="0.01"
-                              value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
-                              placeholder="Enter amount"
-                              className="flex-1"
-                              required
-                            />
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                onClick={splitAmountEqually}
-                                variant="outline"
-                                className="px-3"
-                                disabled={!amount}
-                                title="Split for all members"
-                              >
-                                <Users className="h-4 w-4" />
-                              </Button>
-                              <Popover open={showMemberSelection} onOpenChange={setShowMemberSelection}>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="px-3"
-                                    disabled={!amount}
-                                    title="Split for custom members"
-                                  >
-                                    <UserCheck className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64 p-4" align="end">
-                                  <div className="space-y-3">
-                                    <Label className="text-sm font-semibold">Select Members for Split</Label>
-                                    <div className="space-y-2">
-                                      {selectedTrip.members.map((member) => (
-                                        <div key={member} className="flex items-center space-x-2">
-                                          <Checkbox
-                                            id={member}
-                                            checked={selectedMembersForSplit.includes(member)}
-                                            onCheckedChange={() => toggleMemberSelection(member)}
-                                          />
-                                          <Label htmlFor={member} className="text-sm">{member}</Label>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <Button
-                                      onClick={splitAmongSelectedMembers}
-                                      className="w-full"
-                                      disabled={selectedMembersForSplit.length === 0}
-                                    >
-                                      Split Amount
-                                    </Button>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            <Users className="inline h-3 w-3 mr-1" />Split for all |
-                            <UserCheck className="inline h-3 w-3 mx-1" />Split for custom members
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-semibold">Amount per Member</Label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
-                          {selectedTrip.members.map((member, index) => (
-                            <div key={index}>
-                              <Label htmlFor={`member-${index}`} className="text-xs text-gray-600">
-                                {member}
-                              </Label>
-                              <Input
-                                id={`member-${index}`}
-                                type="number"
-                                step="0.01"
-                                value={memberAmounts[member] || 0}
-                                onChange={(e) => handleMemberAmountChange(member, e.target.value)}
-                                placeholder="0.00"
-                                className="mt-1"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-2">
-                          Total assigned: ₹{Object.values(memberAmounts).reduce((sum, amt) => sum + amt, 0).toFixed(2)}
-                        </div>
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${isSubmitting
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
-                          }`}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Plus className="mr-2 h-4 w-4 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Expense
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card> */}
 
                 <Card>
                   <CardHeader className="bg-blue-600 text-white">
@@ -924,30 +746,6 @@ const TrackExpenses = () => {
                     )}
                   </CardContent>
                 </Card>
-                <Button
-                  onClick={() => setShowExpenseDrawer(true)}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  + Add Expense
-                </Button>
-                <Button 
-                  onClick={exportToExcel}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                  Export Excel
-                </Button>
-                <Button 
-                  onClick={exportToPDF}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                  Export PDF
-                </Button>
-                <Button 
-                  onClick={() => setShowActivityDrawer(true)}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                  View Activities
-                </Button>
               </>
             )}
           </>

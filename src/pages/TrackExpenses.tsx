@@ -625,7 +625,7 @@ const TrackExpenses = () => {
                 </Button>
                 </div> */}
 
-<div className="flex space-x-4">
+<div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
   <Button
     onClick={() => setShowExpenseDrawer(true)}
     className="bg-blue-600 text-white hover:bg-blue-700"

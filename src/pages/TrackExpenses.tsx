@@ -31,6 +31,7 @@ import { useAuth } from "@/context/AuthContext";
 import Footer from "@/components/ui/Footer";
 import { useLocation as usePageLocation } from "react-router-dom";
 
+
 interface TripTemplate {
   tripId: string;
   tripName: string;
@@ -94,6 +95,7 @@ const TrackExpenses = () => {
   const [showMemberSelection, setShowMemberSelection] = useState(false);
   const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
   const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
+  const [showSettlement, setShowSettlement] = useState(false);
 
 
   const toCamelTrip = (t: any): TripTemplate => ({
@@ -805,6 +807,25 @@ const TrackExpenses = () => {
                               })}
                               <TableCell></TableCell>
                             </TableRow>
+                            {showSettlement && (
+                              <TableRow className="bg-yellow-50 font-semibold">
+                                <TableCell colSpan={3} className="text-right">Settlement</TableCell>
+                                <TableCell>₹{budgetRemaining.toFixed(2)}</TableCell>
+                                {selectedTrip.members.map((member, index) => {
+                                  const memberTotal = filteredExpenses.reduce(
+                                    (sum, exp) => sum + (exp.memberAmounts[member] || 0), 0
+                                  );
+                                  const share = selectedTrip.budget / selectedTrip.members.length;
+                                  const delta = +(share - memberTotal).toFixed(2);
+                                  return (
+                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-green-600" : "text-red-600"}`}>
+                                      {delta >= 0 ? `+₹${delta.toFixed(2)}` : `-₹${Math.abs(delta).toFixed(2)}`}
+                                    </TableCell>
+                                  );
+                                })}
+                                <TableCell></TableCell>
+                              </TableRow>
+                            )}
                           </TableBody>
                         </Table>
                       </div>

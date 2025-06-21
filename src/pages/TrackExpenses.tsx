@@ -349,7 +349,6 @@ const TrackExpenses = () => {
       })
       .then(inserted => {
         toast({
-          // title: "Success!",
           title: `✅ ₹${total.toFixed(2)} added to ${expenseType}`,
           description: "Expense saved",
           variant: "default",
@@ -549,7 +548,7 @@ const TrackExpenses = () => {
 
                   <Card>
                     <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Where are my total expenses going?</CardTitle>
+                      <CardTitle>Overview of Expenses</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
                       <div className="divide-y divide-gray-200">
@@ -597,6 +596,33 @@ const TrackExpenses = () => {
                       )}
                     </CardContent>
                   </Card>
+                </div>
+
+                <div>
+                <Button
+                  onClick={() => setShowExpenseDrawer(true)}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  + Add Expense
+                </Button>
+                <Button 
+                  onClick={exportToExcel}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                  Export Excel
+                </Button>
+                <Button 
+                  onClick={exportToPDF}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                  Export PDF
+                </Button>
+                <Button 
+                  onClick={() => setShowActivityDrawer(true)}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                  View Activities
+                </Button>
                 </div>
 
                 {/* <Card className="mb-6">

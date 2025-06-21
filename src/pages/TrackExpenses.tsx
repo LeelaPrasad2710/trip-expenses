@@ -895,6 +895,12 @@ const TrackExpenses = () => {
                     )}
                   </CardContent>
                 </Card>
+                <Button
+                  onClick={() => setShowExpenseDrawer(true)}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  + Add Expense
+                </Button>
                 <Button 
                   onClick={exportToExcel}
                   className="bg-blue-600 text-white hover:bg-blue-700"

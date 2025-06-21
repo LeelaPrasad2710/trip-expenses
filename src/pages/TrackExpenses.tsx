@@ -721,7 +721,7 @@ const TrackExpenses = () => {
 
                   <Button
                     onClick={() => setShowSettlement(!showSettlement)}
-                    className="bg-green-600 text-white hover:bg-green-700"
+                    className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                     {showSettlement ? "Hide Settlement" : "Settle"}
                 </Button>

@@ -349,11 +349,14 @@ const TrackExpenses = () => {
       })
       .then(inserted => {
         toast({
-          title: "Success!",
+          // title: "Success!",
+          title: `✅ ₹${total.toFixed(2)} added to ${expenseType}`,
           description: "Expense saved",
           variant: "default",
           className: "bg-green-500 text-white",
         });
+
+        setShowExpenseDrawer(false);
 
         const expense = toCamelExpense(inserted);
         setExpenses(prev => {

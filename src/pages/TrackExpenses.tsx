@@ -153,13 +153,105 @@ const TrackExpenses = () => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Trip Expenses", 14, 20);
-    doc.autoTable({
-      startY: 30,
-      head: [["Date", "Type", "Description", "Amount"]],
-      body: expenses.map(e => [e.date, e.expenseType, e.description, e.amount])
+    if (!selectedTrip || expenses.length === 0) {
+      toast({
+        title: "Nothing to export",
+        description: "Please select a trip with expenses.",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
     });
+  
+    doc.setFontSize(14);
+    doc.text("Trip Expenses", 14, 15);
+  
+    doc.setFontSize(10);
+    doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
+    doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
+    doc.text(`Total Expenses: Rs. ${totalAmount.toFixed(2)}`, 14, 34);
+    doc.text(`Remaining Budget: Rs. ${(selectedTrip.budget - totalAmount).toFixed(2)}`, 14, 40);
+
+    const expenseBreakdown = selectedTrip.expenseTypes.map(type => {
+      const typeExpenses = expenses.filter(exp => exp.expenseType === type);
+      const typeTotal = typeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const percentage = totalAmount > 0 ? Math.round((typeTotal / totalAmount) * 100) : 0;
+      return {
+        type,
+        amount: typeTotal,
+        percentage,
+        count: typeExpenses.length
+      };
+    });
+  
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Overview", 14, 46);
+  
+    autoTable(doc, {
+      startY: 50,
+      head: [["Type", "Percentage", "Amount", "Count"]],
+      body: expenseBreakdown.map(b => [
+        b.type,
+        `${b.percentage}%`,
+        `Rs. ${b.amount.toFixed(2)}`,
+        b.count.toString()
+      ]),
+      styles: {
+        fontSize: 9,
+      },
+      headStyles: {
+        fillColor: [52, 152, 219],
+        textColor: 255,
+        fontSize: 9,
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 25 },
+      },
+    });
+  
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [[
+        "Date",
+        "Type",
+        "Description",
+        "Amount",
+        ...selectedTrip.members,
+        "Added By"
+      ]],
+      body: expenses.map(e => [
+        format(new Date(e.date), "MMM dd, yyyy"),
+        e.expenseType || "N/A",
+        e.description || "N/A",
+        `Rs. ${e.amount.toFixed(2)}`,
+        ...selectedTrip.members.map(m => `Rs. ${(e.memberAmounts[m] || 0).toFixed(2)}`),
+        e.createdBy || "N/A"
+      ]),
+      styles: {
+        fontSize: 9,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 8,
+      },
+      columnStyles: {
+        0: { cellWidth: 25 }, // Date
+        1: { cellWidth: 20 }, // Type
+        2: { cellWidth: 30 }, // Description
+        3: { cellWidth: 25 }, // Amount
+      },
+    });
+  
     doc.save("trip_expenses.pdf");
   };
 
@@ -934,7 +1026,6 @@ const TrackExpenses = () => {
                   </>
                 ) : (
                   <>
-                    {/* <Plus className="mr-2 h-4 w-4" /> */}
                     {editExpenseId ? "Update Expense" : "Add Expense"}
                   </>
                 )}

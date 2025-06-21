@@ -31,6 +31,15 @@ import { useAuth } from "@/context/AuthContext";
 import Footer from "@/components/ui/Footer";
 import { useLocation as usePageLocation } from "react-router-dom";
 
+const LoadingSpinner = () => {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-blue-600 text-sm font-medium">Loading trip data from server...</p>
+    </div>
+  );
+};
+
 
 interface TripTemplate {
   tripId: string;
@@ -96,6 +105,7 @@ const TrackExpenses = () => {
   const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
   const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [tripDetailsLoading, setTripDetailsLoading] = useState(false);
 
 
   const toCamelTrip = (t: any): TripTemplate => ({
@@ -163,16 +173,16 @@ const TrackExpenses = () => {
       });
       return;
     }
-  
+
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
-  
+
     doc.setFontSize(14);
     doc.text("Trip Expenses", 14, 15);
-  
+
     doc.setFontSize(10);
     doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
     doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
@@ -190,11 +200,11 @@ const TrackExpenses = () => {
         count: typeExpenses.length
       };
     });
-  
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("Overview", 14, 46);
-  
+
     autoTable(doc, {
       startY: 50,
       head: [["Type", "Percentage", "Amount", "Count"]],
@@ -219,7 +229,7 @@ const TrackExpenses = () => {
         3: { cellWidth: 25 },
       },
     });
-  
+
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 10,
       head: [[
@@ -253,7 +263,7 @@ const TrackExpenses = () => {
         3: { cellWidth: 25 }, // Amount
       },
     });
-  
+
     doc.save("trip_expenses.pdf");
   };
 
@@ -305,31 +315,68 @@ const TrackExpenses = () => {
 
   useEffect(() => {
     if (!selectedTripId) return;
-    fetch(`${API_BASE}/logs?tripId=${selectedTripId}`)
-      .then(res => res.json())
-      .then(setActivityLogs)
-      .catch(err => {
-        console.error("Failed to load logs:", err);
-        setActivityLogs([]);
-      });
-  }, [selectedTripId]);
 
-  useEffect(() => {
-    if (selectedTripId) {
-      fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`)
-        .then(res => res.json())
-        .then(data => {
-          console.log("Fetched expenses for trip:", data);
-          setExpenses(data.map(toCamelExpense));
-        })
-        .catch((err) => {
-          console.error("Error loading expenses:", err);
-          setExpenses([]);
-        });
-    } else {
-      setExpenses([]);
+    const trip = tripTemplates.find(t => t.tripId === selectedTripId);
+    setSelectedTrip(null); // Clear old trip
+    setTripDetailsLoading(true); // Start loading before fetches
+
+    if (!trip) {
+      setTripDetailsLoading(false);
+      return;
     }
-  }, [selectedTripId]);
+
+    setSelectedTrip(trip);
+    const initial: Record<string, number> = {};
+    trip.members.forEach((m) => (initial[m] = 0));
+    setMemberAmounts(initial);
+
+    Promise.all([
+      fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`).then((res) => res.json()),
+      fetch(`${API_BASE}/logs?tripId=${selectedTripId}`).then((res) => res.json())
+    ])
+      .then(([expensesData, logsData]) => {
+        setExpenses(expensesData.map(toCamelExpense));
+        setActivityLogs(logsData);
+      })
+      .catch((err) => {
+        console.error("Error fetching trip data:", err);
+        setExpenses([]);
+        setActivityLogs([]);
+      })
+      .finally(() => {
+        setTripDetailsLoading(false);
+      });
+
+  }, [selectedTripId, tripTemplates]);
+
+
+  // useEffect(() => {
+  //   if (!selectedTripId) return;
+  //   fetch(`${API_BASE}/logs?tripId=${selectedTripId}`)
+  //     .then(res => res.json())
+  //     .then(setActivityLogs)
+  //     .catch(err => {
+  //       console.error("Failed to load logs:", err);
+  //       setActivityLogs([]);
+  //     });
+  // }, [selectedTripId]);
+
+  // useEffect(() => {
+  //   if (selectedTripId) {
+  //     fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`)
+  //       .then(res => res.json())
+  //       .then(data => {
+  //         console.log("Fetched expenses for trip:", data);
+  //         setExpenses(data.map(toCamelExpense));
+  //       })
+  //       .catch((err) => {
+  //         console.error("Error loading expenses:", err);
+  //         setExpenses([]);
+  //       });
+  //   } else {
+  //     setExpenses([]);
+  //   }
+  // }, [selectedTripId]);
 
   const splitAmountEqually = () => {
     if (!selectedTrip) return;
@@ -589,7 +636,10 @@ const TrackExpenses = () => {
       </header>
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         {loadingTrips ? (
-          <p className="text-center text-gray-500 text-lg">Loading trip data... please wait.</p>
+          <>
+            <LoadingSpinner />
+            <p className="text-center text-gray-500 text-lg">Loading trip data... please wait.</p>
+          </>
         ) : !selectedTrip ? (
           <Card>
             <CardContent>
@@ -610,7 +660,211 @@ const TrackExpenses = () => {
           </Card>
         ) : (
           <>
-            {selectedTrip && (
+            {selectedTripId && tripDetailsLoading ? (
+              <LoadingSpinner />
+            ) : selectedTrip ? (
+              <>
+                {/* Budget vs Spend + Overview */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader className="bg-blue-600 text-white">
+                      <CardTitle>Budget vs Spend</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4">
+                      <div>
+                        <Label className="text-sm text-gray-600">Total Budget</Label>
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded text-center">
+                          <span className="text-xl font-bold">₹{selectedTrip.budget.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-600">Total Expenses</Label>
+                        <div className="bg-blue-100 border border-blue-300 p-3 rounded text-center">
+                          <span className="text-xl font-bold">₹{totalAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-600">Remaining Budget</Label>
+                        <div className={`border p-3 rounded text-center ${budgetRemaining >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <span className={`text-xl font-bold ${budgetRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ₹{budgetRemaining.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="bg-blue-600 text-white">
+                      <CardTitle>Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="divide-y divide-gray-200">
+                        {expenseBreakdown.map((item, index) => (
+                          <div key={item.type} className="flex justify-between items-center py-2">
+                            <span className="font-semibold text-sm text-gray-700">{item.type}</span>
+                            <div className="flex items-center space-x-4">
+                              <div className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0 ? 'bg-blue-500' :
+                                  index === 1 ? 'bg-green-500' :
+                                    index === 2 ? 'bg-red-500' :
+                                      index === 3 ? 'bg-orange-500' : 'bg-gray-500'
+                                }`}>
+                                {item.percentage}%
+                              </div>
+                              <span className="text-sm font-semibold text-right text-gray-800 w-[80px]">
+                                ₹{item.amount.toFixed(2)}
+                              </span>
+                              <span className="text-sm font-medium text-right text-gray-500 w-[40px]">
+                                {item.count}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {totalAmount > 0 && (
+                        <div className="mt-4 text-center">
+                          <div className="text-2xl font-bold text-gray-700">
+                            ₹{totalAmount.toFixed(0)}
+                          </div>
+                          <div className="text-sm text-gray-500">Total Expenses</div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
+                  <Button onClick={() => setShowExpenseDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                    + Add Expense
+                  </Button>
+                  <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
+                    Export Excel
+                  </Button>
+                  <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
+                    Export PDF
+                  </Button>
+                  <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                    View Activities
+                  </Button>
+                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-green-600 text-white hover:bg-green-700">
+                    {showSettlement ? "Hide Settlement" : "Settle"}
+                  </Button>
+                </div>
+
+                {/* Expense Table */}
+                <Card>
+                  <CardHeader className="bg-blue-600 text-white">
+                    <CardTitle>What are my expenses?</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {filteredExpenses.length === 0 ? (
+                      <p className="text-center text-gray-500 py-8">No expenses recorded yet</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gray-50">
+                              <TableHead>Date</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Total Amount</TableHead>
+                              {selectedTrip.members.map((member) => (
+                                <TableHead key={member} className="text-center">{member}</TableHead>
+                              ))}
+                              <TableHead>Added By</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {filteredExpenses.map((expense) => (
+                              <TableRow key={expense.id}>
+                                <TableCell>{format(new Date(expense.date), "MMM dd, yyyy")}</TableCell>
+                                <TableCell>{expense.expenseType}</TableCell>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium">{expense.expenseOption || "N/A"}</div>
+                                    {expense.description && <div className="text-xs text-gray-500">{expense.description}</div>}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="font-bold">₹{expense.amount.toFixed(2)}</TableCell>
+                                {selectedTrip.members.map((member) => (
+                                  <TableCell key={member} className="text-center">
+                                    ₹{(expense.memberAmounts[member] || 0).toFixed(2)}
+                                  </TableCell>
+                                ))}
+                                <TableCell>{expense.createdBy || "N/A"}</TableCell>
+                                <TableCell>
+                                  {expense.createdBy === user?.displayName || expense.createdBy === user?.email ? (
+                                    <>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditExpense(expense)}
+                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      >
+                                        Edit
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteExpense(expense.id)}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <span className="text-xs text-gray-400 italic">No access</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow className="bg-blue-50 font-bold">
+                              <TableCell colSpan={3} className="text-right">Total Expenses</TableCell>
+                              <TableCell>₹{totalAmount.toFixed(2)}</TableCell>
+                              {selectedTrip.members.map((member) => {
+                                const memberTotal = filteredExpenses.reduce((sum, expense) =>
+                                  sum + (expense.memberAmounts[member] || 0), 0
+                                );
+                                return (
+                                  <TableCell key={member} className="text-center font-bold">
+                                    ₹{memberTotal.toFixed(2)}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell />
+                            </TableRow>
+                            {showSettlement && (
+                              <TableRow className="bg-yellow-50 font-semibold">
+                                <TableCell colSpan={3} className="text-right">Settlement</TableCell>
+                                <TableCell>₹{budgetRemaining.toFixed(2)}</TableCell>
+                                {selectedTrip.members.map((member, index) => {
+                                  const memberTotal = filteredExpenses.reduce(
+                                    (sum, exp) => sum + (exp.memberAmounts[member] || 0), 0
+                                  );
+                                  const share = selectedTrip.budget / selectedTrip.members.length;
+                                  const delta = +(share - memberTotal).toFixed(2);
+                                  return (
+                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-green-600" : "text-red-600"}`}>
+                                      {delta >= 0 ? `+₹${delta.toFixed(2)}` : `-₹${Math.abs(delta).toFixed(2)}`}
+                                    </TableCell>
+                                  );
+                                })}
+                                <TableCell />
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+
+            {/* {selectedTrip && (
               <>
                 <div className="grid md:grid-cols-2 gap-6">
                   <Card>
@@ -840,7 +1094,7 @@ const TrackExpenses = () => {
                   </CardContent>
                 </Card>
               </>
-            )}
+            )} */}
           </>
         )}
       </main>

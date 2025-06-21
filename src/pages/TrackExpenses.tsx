@@ -454,6 +454,7 @@ const TrackExpenses = () => {
     setLocation(expense.location || "");
     setAmount(expense.amount.toString());
     setMemberAmounts({ ...expense.memberAmounts });
+    setShowExpenseDrawer(true);
   };
 
 
@@ -563,14 +564,14 @@ const TrackExpenses = () => {
                             <div className="flex items-center space-x-4">
                               <div
                                 className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0
-                                    ? 'bg-blue-500'
-                                    : index === 1
-                                      ? 'bg-green-500'
-                                      : index === 2
-                                        ? 'bg-red-500'
-                                        : index === 3
-                                          ? 'bg-orange-500'
-                                          : 'bg-gray-500'
+                                  ? 'bg-blue-500'
+                                  : index === 1
+                                    ? 'bg-green-500'
+                                    : index === 2
+                                      ? 'bg-red-500'
+                                      : index === 3
+                                        ? 'bg-orange-500'
+                                        : 'bg-gray-500'
                                   }`}
                               >
                                 {item.percentage}%
@@ -598,60 +599,32 @@ const TrackExpenses = () => {
                   </Card>
                 </div>
 
-                {/* <div>
-                <Button
-                  onClick={() => setShowExpenseDrawer(true)}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  + Add Expense
-                </Button>
-                <Button 
-                  onClick={exportToExcel}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
+                <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
+                  <Button
+                    onClick={() => setShowExpenseDrawer(true)}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
                   >
-                  Export Excel
-                </Button>
-                <Button 
-                  onClick={exportToPDF}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
+                    + Add Expense
+                  </Button>
+                  <Button
+                    onClick={exportToExcel}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
                   >
-                  Export PDF
-                </Button>
-                <Button 
-                  onClick={() => setShowActivityDrawer(true)}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
+                    Export Excel
+                  </Button>
+                  <Button
+                    onClick={exportToPDF}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
                   >
-                  View Activities
-                </Button>
-                </div> */}
-
-<div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
-  <Button
-    onClick={() => setShowExpenseDrawer(true)}
-    className="bg-blue-600 text-white hover:bg-blue-700"
-  >
-    + Add Expense
-  </Button>
-  <Button
-    onClick={exportToExcel}
-    className="bg-blue-600 text-white hover:bg-blue-700"
-  >
-    Export Excel
-  </Button>
-  <Button
-    onClick={exportToPDF}
-    className="bg-blue-600 text-white hover:bg-blue-700"
-  >
-    Export PDF
-  </Button>
-  <Button
-    onClick={() => setShowActivityDrawer(true)}
-    className="bg-blue-600 text-white hover:bg-blue-700"
-  >
-    View Activities
-  </Button>
-</div>
-
+                    Export PDF
+                  </Button>
+                  <Button
+                    onClick={() => setShowActivityDrawer(true)}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    View Activities
+                  </Button>
+                </div>
 
                 <Card>
                   <CardHeader className="bg-blue-600 text-white">
@@ -962,7 +935,7 @@ const TrackExpenses = () => {
                 ) : (
                   <>
                     {/* <Plus className="mr-2 h-4 w-4" /> */}
-                    Submit
+                    {editExpenseId ? "Update Expense" : "Add Expense"}
                   </>
                 )}
               </Button>

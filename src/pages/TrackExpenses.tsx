@@ -695,29 +695,36 @@ const TrackExpenses = () => {
 
                 <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <Button
-                    onClick={() => setShowExpenseDrawer(true)}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    + Add Expense
+                      onClick={() => setShowExpenseDrawer(true)}
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      + Add Expense
                   </Button>
                   <Button
-                    onClick={exportToExcel}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    Export Excel
+                      onClick={exportToExcel}
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Export Excel
                   </Button>
                   <Button
-                    onClick={exportToPDF}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    Export PDF
+                      onClick={exportToPDF}
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Export PDF
                   </Button>
                   <Button
-                    onClick={() => setShowActivityDrawer(true)}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    View Activities
+                      onClick={() => setShowActivityDrawer(true)}
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      View Activities
                   </Button>
+
+                  <Button
+                    onClick={() => setShowSettlement(!showSettlement)}
+                    className="bg-green-600 text-white hover:bg-green-700"
+                  >
+                    {showSettlement ? "Hide Settlement" : "Settle"}
+                </Button>
                 </div>
 
                 <Card>

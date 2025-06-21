@@ -90,23 +90,41 @@ router.put("/:id", async (req, res) => {
 //   await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [req.params.id]);
 //   res.json({ success: true });
 // });
+// router.delete("/:id", async (req, res) => {
+//   const tripId = req.params.id;
+
+//   try {
+//     // Delete associated expenses
+//     await pool.query("DELETE FROM trip_expenses WHERE trip_id = $1", [tripId]);
+
+//     // Delete associated logs
+//     await pool.query("DELETE FROM trip_logs WHERE trip_id = $1", [tripId]);
+
+//     // Delete the trip itself
+//     await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [tripId]);
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error("🔥 Failed to delete trip and related data:", err.message);
+//     res.status(500).json({ success: false, error: "Failed to delete trip fully" });
+//   }
+// });
+
 router.delete("/:id", async (req, res) => {
   const tripId = req.params.id;
+  console.log(`🗑️ Deleting trip and related data for: ${tripId}`);
 
   try {
-    // Delete associated expenses
-    await pool.query("DELETE FROM trip_expenses WHERE trip_id = $1", [tripId]);
+    const { rowCount: exp } = await pool.query("DELETE FROM trip_expenses WHERE trip_id = $1", [tripId]);
+    const { rowCount: logs } = await pool.query("DELETE FROM trip_logs WHERE trip_id = $1", [tripId]);
+    const { rowCount: trips } = await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [tripId]);
 
-    // Delete associated logs
-    await pool.query("DELETE FROM trip_logs WHERE trip_id = $1", [tripId]);
-
-    // Delete the trip itself
-    await pool.query("DELETE FROM trip_templates WHERE trip_id = $1", [tripId]);
+    console.log(`✔️ Deleted: ${trips} trip, ${exp} expenses, ${logs} logs`);
 
     res.json({ success: true });
   } catch (err) {
-    console.error("🔥 Failed to delete trip and related data:", err.message);
-    res.status(500).json({ success: false, error: "Failed to delete trip fully" });
+    console.error("❌ Failed to delete:", err.message);
+    res.status(500).json({ success: false });
   }
 });
 

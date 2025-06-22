@@ -871,7 +871,7 @@ const TrackExpenses = () => {
                   </Button>
 
                   <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    {showSettlement ? "💸 Hide Settlement" : " 💸 Settle"}
+                    {showSettlement ? "💸 Hide Settlement" : "💸 Settle"}
                   </Button>
 
                   <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">

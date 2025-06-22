@@ -106,6 +106,13 @@ const TrackExpenses = () => {
   const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
   const [tripDetailsLoading, setTripDetailsLoading] = useState(false);
+  const [showBoardDrawer, setShowBoardDrawer] = useState(false);
+  const [boardEntries, setBoardEntries] = useState<
+    { id: string; heading: string; content: string; created_by: string; created_at: string }[]
+  >([]);
+  const [newBoardHeading, setNewBoardHeading] = useState("");
+  const [newBoardContent, setNewBoardContent] = useState("");
+  
 
 
   const toCamelTrip = (t: any): TripTemplate => ({
@@ -163,109 +170,6 @@ const TrackExpenses = () => {
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trip_expenses.xlsx");
   };
-
-  // const exportToPDF = () => {
-  //   if (!selectedTrip || expenses.length === 0) {
-  //     toast({
-  //       title: "Nothing to export",
-  //       description: "Please select a trip with expenses.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   const doc = new jsPDF({
-  //     orientation: "landscape",
-  //     unit: "mm",
-  //     format: "a4",
-  //   });
-
-  //   doc.setFontSize(14);
-  //   doc.text("Trip Expenses", 14, 15);
-
-  //   doc.setFontSize(10);
-  //   doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
-  //   doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
-  //   doc.text(`Total Expenses: Rs. ${totalAmount.toFixed(2)}`, 14, 34);
-  //   doc.text(`Remaining Budget: Rs. ${(selectedTrip.budget - totalAmount).toFixed(2)}`, 14, 40);
-
-  //   const expenseBreakdown = selectedTrip.expenseTypes.map(type => {
-  //     const typeExpenses = expenses.filter(exp => exp.expenseType === type);
-  //     const typeTotal = typeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  //     const percentage = totalAmount > 0 ? Math.round((typeTotal / totalAmount) * 100) : 0;
-  //     return {
-  //       type,
-  //       amount: typeTotal,
-  //       percentage,
-  //       count: typeExpenses.length
-  //     };
-  //   });
-
-  //   doc.setFont("helvetica", "bold");
-  //   doc.setFontSize(12);
-  //   doc.text("Overview", 14, 46);
-
-  //   autoTable(doc, {
-  //     startY: 50,
-  //     head: [["Type", "Percentage", "Amount", "Count"]],
-  //     body: expenseBreakdown.map(b => [
-  //       b.type,
-  //       `${b.percentage}%`,
-  //       `Rs. ${b.amount.toFixed(2)}`,
-  //       b.count.toString()
-  //     ]),
-  //     styles: {
-  //       fontSize: 9,
-  //     },
-  //     headStyles: {
-  //       fillColor: [52, 152, 219],
-  //       textColor: 255,
-  //       fontSize: 9,
-  //     },
-  //     columnStyles: {
-  //       0: { cellWidth: 40 },
-  //       1: { cellWidth: 30 },
-  //       2: { cellWidth: 35 },
-  //       3: { cellWidth: 25 },
-  //     },
-  //   });
-
-  //   autoTable(doc, {
-  //     startY: (doc as any).lastAutoTable.finalY + 10,
-  //     head: [[
-  //       "Date",
-  //       "Type",
-  //       "Description",
-  //       "Amount",
-  //       ...selectedTrip.members,
-  //       "Added By"
-  //     ]],
-  //     body: expenses.map(e => [
-  //       format(new Date(e.date), "MMM dd, yyyy"),
-  //       e.expenseType || "N/A",
-  //       e.description || "N/A",
-  //       `Rs. ${e.amount.toFixed(2)}`,
-  //       ...selectedTrip.members.map(m => `Rs. ${(e.memberAmounts[m] || 0).toFixed(2)}`),
-  //       e.createdBy || "N/A"
-  //     ]),
-  //     styles: {
-  //       fontSize: 9,
-  //     },
-  //     headStyles: {
-  //       fillColor: [41, 128, 185],
-  //       textColor: 255,
-  //       fontSize: 8,
-  //     },
-  //     columnStyles: {
-  //       0: { cellWidth: 25 }, // Date
-  //       1: { cellWidth: 20 }, // Type
-  //       2: { cellWidth: 30 }, // Description
-  //       3: { cellWidth: 25 }, // Amount
-  //     },
-  //   });
-
-  //   doc.save("trip_expenses.pdf");
-  // };
 
   const exportToPDF = () => {
     if (!selectedTrip || expenses.length === 0) {
@@ -464,11 +368,13 @@ const TrackExpenses = () => {
 
     Promise.all([
       fetch(`${API_BASE}/expenses?tripId=${selectedTripId}`).then((res) => res.json()),
-      fetch(`${API_BASE}/logs?tripId=${selectedTripId}`).then((res) => res.json())
+      fetch(`${API_BASE}/logs?tripId=${selectedTripId}`).then((res) => res.json()),
+      fetch(`${API_BASE}/boards?tripId=${selectedTripId}`).then((res) => res.json())
     ])
-      .then(([expensesData, logsData]) => {
+      .then(([expensesData, logsData, boardsData]) => {
         setExpenses(expensesData.map(toCamelExpense));
         setActivityLogs(logsData);
+        setBoardEntries(boardsData);
       })
       .catch((err) => {
         console.error("Error fetching trip data:", err);
@@ -852,6 +758,12 @@ const TrackExpenses = () => {
                   <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-green-600 text-white hover:bg-green-700">
                     {showSettlement ? "Hide Settlement" : "Settle"}
                   </Button>
+                  <Button
+                  onClick={() => setShowBoardDrawer(true)}
+                  className="bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  View Trip Board
+              </Button>
                 </div>
 
                 <Card>
@@ -967,6 +879,89 @@ const TrackExpenses = () => {
         )}
       </main>
       <Footer />
+
+      {showBoardDrawer && (
+        <div className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl z-50 border-l border-gray-300 p-6 overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-indigo-700">Trip Board</h2>
+            <Button variant="ghost" onClick={() => setShowBoardDrawer(false)}>Close</Button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="border p-3 rounded">
+              <Label className="block text-sm font-semibold text-gray-600">Heading</Label>
+              <Input
+                value={newBoardHeading}
+                onChange={(e) => setNewBoardHeading(e.target.value)}
+                placeholder="e.g. Timings or Checklist"
+                className="mt-1 mb-2"
+              />
+              <Label className="block text-sm font-semibold text-gray-600">Content</Label>
+              <Textarea
+                value={newBoardContent}
+                onChange={(e) => setNewBoardContent(e.target.value)}
+                placeholder="e.g. Dep - 9:30 PM, Arrival - 7:20 AM"
+                className="mt-1"
+              />
+              <Button
+                className="mt-3 bg-indigo-600 text-white w-full"
+                onClick={async () => {
+                  if (!newBoardHeading.trim() || !newBoardContent.trim() || !selectedTrip) return;
+                  const entry = {
+                    id: `BOARD-${Date.now()}`,
+                    trip_id: selectedTrip.tripId,
+                    heading: newBoardHeading,
+                    content: newBoardContent,
+                    created_by: user?.displayName || user?.email || "Unknown"
+                  };
+                  const res = await fetch(`${API_BASE}/boards`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(entry)
+                  });
+                  const inserted = await res.json();
+                  setBoardEntries(prev => [inserted, ...prev]);
+                  setNewBoardHeading("");
+                  setNewBoardContent("");
+                }}
+              >
+                Add Entry
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {boardEntries.length === 0 ? (
+                <p className="text-gray-400 italic">No board content yet.</p>
+              ) : (
+                boardEntries.map(entry => (
+                  <div key={entry.id} className="border p-3 rounded shadow-sm bg-gray-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-md font-bold text-indigo-700">{entry.heading}</h3>
+                        <p className="text-sm text-gray-800 whitespace-pre-line">{entry.content}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          By {entry.created_by} • {new Date(entry.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-600 hover:bg-red-100"
+                        onClick={async () => {
+                          await fetch(`${API_BASE}/boards/${entry.id}`, { method: "DELETE" });
+                          setBoardEntries(prev => prev.filter(b => b.id !== entry.id));
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showExpenseDrawer && (
         <div className="fixed right-0 top-0 w-full sm:w-[410px] h-full bg-white shadow-lg z-50 overflow-y-auto transition-all duration-300 border-l border-gray-300">

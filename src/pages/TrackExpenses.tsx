@@ -896,7 +896,7 @@ const TrackExpenses = () => {
                   </Button>
 
                   <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    🕘 View Activities
+                    🕘 Logs
                   </Button>
 
                   <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-blue-600 text-white hover:bg-blue-700">
@@ -904,11 +904,11 @@ const TrackExpenses = () => {
                   </Button>
 
                   <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
-                    📄 Export Excel
+                    📄 Excel
                   </Button>
 
                   <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
-                    📄 Export PDF
+                    📄 PDF
                   </Button>
 
                   <Button

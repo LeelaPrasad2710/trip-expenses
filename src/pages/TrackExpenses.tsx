@@ -119,6 +119,7 @@ const TrackExpenses = () => {
     }
   
     const input = chatInput.toLowerCase();
+  
     const amtMatch = input.match(/spent\s*₹?(\d+(\.\d{1,2})?)/i);
     const typeMatch = input.match(/on\s+(\w+)/i);
     const desc1Match = input.match(/as\s+(.+?)\s+(at|for|on\s)/i);
@@ -127,20 +128,20 @@ const TrackExpenses = () => {
     const dateMatch = chatInput.match(/\s+on\s+(\w+\s+\d{1,2}(?:,\s*\d{4})?)$/i);
   
     const amount = amtMatch ? parseFloat(amtMatch[1]) : null;
-    const type = typeMatch?.[1] || "";
-    const desc1 = desc1Match?.[1]?.trim() || "";
+    const rawType = typeMatch?.[1] || "";
+    const rawDesc1 = desc1Match?.[1]?.trim() || "";
     const desc2 = desc2Match?.[1]?.trim() || "";
     const peopleRaw = forMatch?.[1]?.trim() || "everyone";
     const dateText = dateMatch?.[1] || "";
   
     console.log("Parsed amount:", amount);
-    console.log("Parsed type:", type);
-    console.log("Parsed desc1:", desc1);
+    console.log("Parsed type:", rawType);
+    console.log("Parsed desc1:", rawDesc1);
     console.log("Parsed desc2:", desc2);
     console.log("Parsed peopleRaw:", peopleRaw);
     console.log("Parsed dateText:", dateText);
   
-    if (!amount || !type) {
+    if (!amount || !rawType) {
       return toast({
         title: "Parsing failed",
         description: "Amount or type missing.",
@@ -148,10 +149,13 @@ const TrackExpenses = () => {
       });
     }
   
-    const description = desc2; // ✅ Taj
-    const expense_option = desc1; // ✅ Advance
-    const location = desc2; // Optional: reuse desc2 as location
+    const capitalize = (s: string) =>
+      s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
   
+    const expense_type = capitalize(rawType);
+    const expense_option = capitalize(rawDesc1);
+    const description = capitalize(desc2);
+    const location = desc2;
     const date = dateText ? new Date(dateText) : new Date();
   
     const members =
@@ -184,7 +188,7 @@ const TrackExpenses = () => {
       trip_id: selectedTrip.tripId,
       trip_name: selectedTrip.tripName,
       date: date.toISOString(),
-      expense_type: type,
+      expense_type,
       expense_option,
       description,
       location,
@@ -206,7 +210,7 @@ const TrackExpenses = () => {
         setExpenses((prev) => [...prev, toCamelExpense(inserted)]);
         toast({
           title: "✅ Expense Added",
-          description: `₹${amount} on ${type}`,
+          description: `₹${amount} on ${expense_type}`,
         });
         setChatInput("");
         setShowChatToAdd(false);

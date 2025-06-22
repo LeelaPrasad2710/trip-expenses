@@ -113,34 +113,34 @@ const TrackExpenses = () => {
     console.log("Raw Input:", chatInput);
     console.log("Trip selected:", selectedTrip?.tripId);
     console.log("Members available:", selectedTrip?.members);
-  
+
     if (!chatInput.trim() || !selectedTrip) {
       return toast({ title: "Please enter a full expense line." });
     }
-  
+
     const input = chatInput.toLowerCase();
-  
+
     const amtMatch = input.match(/spent\s*₹?(\d+(\.\d{1,2})?)/i);
     const typeMatch = input.match(/on\s+(\w+)/i);
     const desc1Match = input.match(/as\s+(.+?)\s+(at|for|on\s)/i);
     const desc2Match = input.match(/at\s+(.+?)\s+(for|on\s)/i);
     const forMatch = input.match(/for\s+(everyone|.+?)\s*(on|$)/i);
     const dateMatch = chatInput.match(/\s+on\s+(\w+\s+\d{1,2}(?:,\s*\d{4})?)$/i);
-  
+
     const amount = amtMatch ? parseFloat(amtMatch[1]) : null;
     const rawType = typeMatch?.[1] || "";
     const rawDesc1 = desc1Match?.[1]?.trim() || "";
     const desc2 = desc2Match?.[1]?.trim() || "";
     const peopleRaw = forMatch?.[1]?.trim() || "everyone";
     const dateText = dateMatch?.[1] || "";
-  
+
     console.log("Parsed amount:", amount);
     console.log("Parsed type:", rawType);
     console.log("Parsed desc1:", rawDesc1);
     console.log("Parsed desc2:", desc2);
     console.log("Parsed peopleRaw:", peopleRaw);
     console.log("Parsed dateText:", dateText);
-  
+
     if (!amount || !rawType) {
       return toast({
         title: "Parsing failed",
@@ -148,32 +148,32 @@ const TrackExpenses = () => {
         variant: "destructive",
       });
     }
-  
+
     const capitalize = (s: string) =>
       s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
-  
+
     const expense_type = capitalize(rawType);
     const expense_option = capitalize(rawDesc1);
     const description = capitalize(desc2);
     const location = desc2;
     const date = dateText ? new Date(dateText) : new Date();
-  
+
     const members =
       peopleRaw === "everyone"
         ? [...selectedTrip.members]
         : peopleRaw
-            .split(" and ")
-            .map((m) => m.trim())
-            .filter((m) =>
-              selectedTrip.members.some(
-                (mem) => mem.toLowerCase() === m.toLowerCase()
-              )
-            );
-  
+          .split(" and ")
+          .map((m) => m.trim())
+          .filter((m) =>
+            selectedTrip.members.some(
+              (mem) => mem.toLowerCase() === m.toLowerCase()
+            )
+          );
+
     if (members.length === 0) {
       return toast({ title: "No valid members found", variant: "destructive" });
     }
-  
+
     const base = Math.floor((amount / members.length) * 100) / 100;
     const memberMap: Record<string, number> = {};
     members.forEach((m) => (memberMap[m] = base));
@@ -182,7 +182,7 @@ const TrackExpenses = () => {
       memberMap[members[i]] += 0.01;
       rem = +(rem - 0.01).toFixed(2);
     }
-  
+
     const newExp = {
       id: `EXP-${Date.now()}`,
       trip_id: selectedTrip.tripId,
@@ -197,9 +197,9 @@ const TrackExpenses = () => {
       created_at: new Date().toISOString(),
       created_by: user?.displayName || user?.email || "chat-entry",
     };
-  
+
     console.log("Final expense object:", newExp);
-  
+
     fetch(`${API_BASE}/expenses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -287,16 +287,16 @@ const TrackExpenses = () => {
       });
       return;
     }
-  
+
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
-  
+
     doc.setFontSize(14);
     doc.text("Trip Expenses", 14, 15);
-  
+
     doc.setFontSize(10);
     doc.text(`Trip Name: ${selectedTrip.tripName}`, 14, 22);
     doc.text(`Budget: Rs. ${selectedTrip.budget.toFixed(2)}`, 14, 28);
@@ -314,11 +314,11 @@ const TrackExpenses = () => {
         count: typeExpenses.length
       };
     });
-  
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("Overview", 14, 46);
-  
+
     autoTable(doc, {
       startY: 50,
       head: [["Type", "Percentage", "Amount", "Count"]],
@@ -350,11 +350,11 @@ const TrackExpenses = () => {
       2: { cellWidth: 20 }, // Description
       3: { cellWidth: 19 }, // Amount
     };
-    
+
     selectedTrip.members.forEach((_, index) => {
       columnStyles[4 + index] = { cellWidth: 17 }; // Members columns
     });
-    
+
     columnStyles[4 + selectedTrip.members.length] = { cellWidth: 20 }; // "Added By"
 
     autoTable(doc, {
@@ -858,30 +858,29 @@ const TrackExpenses = () => {
                   <Button onClick={() => setShowExpenseDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
                     + Add Expense
                   </Button>
-                  <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
-                   📄 Export Excel
-                  </Button>
-                  <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
-                   📄 Export PDF
-                  </Button>
-                  <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                   🕘 View Activities
-                  </Button>
-                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    {showSettlement ? "Hide Settlement" : "Settle"}
-                  </Button>
-                  <Button
-                    onClick={() => setShowSettlement(!showSettlement)}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    {showSettlement ? "Hide Settlement" : "Settle"}
-                  </Button>
+
                   <Button
                     onClick={() => setShowChatToAdd(true)}
                     className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                     💬 Chat to Add
-                </Button>
+                  </Button>
+
+                  <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                    🕘 View Activities
+                  </Button>
+
+                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-blue-600 text-white hover:bg-blue-700">
+                    {showSettlement ? "💸 Hide Settlement" : " 💸 Settle"}
+                  </Button>
+
+                  <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
+                    📄 Export Excel
+                  </Button>
+
+                  <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
+                    📄 Export PDF
+                  </Button>
                 </div>
 
                 <Card>
@@ -1006,13 +1005,13 @@ const TrackExpenses = () => {
               <Button variant="ghost" onClick={() => setShowChatToAdd(false)}>Close</Button>
             </div>
 
-              <Textarea
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                rows={3}
-                className="w-full"
-                placeholder="Type or modify below"
-              />
+            <Textarea
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              rows={3}
+              className="w-full"
+              placeholder="Type or modify below"
+            />
 
             <Button
               className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"

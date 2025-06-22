@@ -106,6 +106,116 @@ const TrackExpenses = () => {
   const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
   const [tripDetailsLoading, setTripDetailsLoading] = useState(false);
+  const [showChatToAdd, setShowChatToAdd] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+
+  const handleChatExpenseSubmit = () => {
+    console.log("Raw Input:", chatInput);
+    console.log("Trip selected:", selectedTrip?.tripId);
+    console.log("Members available:", selectedTrip?.members);
+  
+    if (!chatInput.trim() || !selectedTrip) {
+      return toast({ title: "Please enter a full expense line." });
+    }
+  
+    const input = chatInput.toLowerCase();
+    const amtMatch = input.match(/spent\s*₹?(\d+(\.\d{1,2})?)/i);
+    const typeMatch = input.match(/on\s+(\w+)/i);
+    const desc1Match = input.match(/as\s+(.+?)\s+(at|for|on\s)/i);
+    const desc2Match = input.match(/at\s+(.+?)\s+(for|on\s)/i);
+    const forMatch = input.match(/for\s+(everyone|.+?)\s*(on|$)/i);
+    const dateMatch = chatInput.match(/\s+on\s+(\w+\s+\d{1,2}(?:,\s*\d{4})?)$/i);
+  
+    const amount = amtMatch ? parseFloat(amtMatch[1]) : null;
+    const type = typeMatch?.[1] || "";
+    const desc1 = desc1Match?.[1]?.trim() || "";
+    const desc2 = desc2Match?.[1]?.trim() || "";
+    const peopleRaw = forMatch?.[1]?.trim() || "everyone";
+    const dateText = dateMatch?.[1] || "";
+  
+    console.log("Parsed amount:", amount);
+    console.log("Parsed type:", type);
+    console.log("Parsed desc1:", desc1);
+    console.log("Parsed desc2:", desc2);
+    console.log("Parsed peopleRaw:", peopleRaw);
+    console.log("Parsed dateText:", dateText);
+  
+    if (!amount || !type) {
+      return toast({
+        title: "Parsing failed",
+        description: "Amount or type missing.",
+        variant: "destructive",
+      });
+    }
+  
+    const description = desc2; // ✅ Taj
+    const expense_option = desc1; // ✅ Advance
+    const location = desc2; // Optional: reuse desc2 as location
+  
+    const date = dateText ? new Date(dateText) : new Date();
+  
+    const members =
+      peopleRaw === "everyone"
+        ? [...selectedTrip.members]
+        : peopleRaw
+            .split(" and ")
+            .map((m) => m.trim())
+            .filter((m) =>
+              selectedTrip.members.some(
+                (mem) => mem.toLowerCase() === m.toLowerCase()
+              )
+            );
+  
+    if (members.length === 0) {
+      return toast({ title: "No valid members found", variant: "destructive" });
+    }
+  
+    const base = Math.floor((amount / members.length) * 100) / 100;
+    const memberMap: Record<string, number> = {};
+    members.forEach((m) => (memberMap[m] = base));
+    let rem = +(amount - base * members.length).toFixed(2);
+    for (let i = 0; i < members.length && rem > 0; i++) {
+      memberMap[members[i]] += 0.01;
+      rem = +(rem - 0.01).toFixed(2);
+    }
+  
+    const newExp = {
+      id: `EXP-${Date.now()}`,
+      trip_id: selectedTrip.tripId,
+      trip_name: selectedTrip.tripName,
+      date: date.toISOString(),
+      expense_type: type,
+      expense_option,
+      description,
+      location,
+      amount,
+      member_amounts: memberMap,
+      created_at: new Date().toISOString(),
+      created_by: user?.displayName || user?.email || "chat-entry",
+    };
+  
+    console.log("Final expense object:", newExp);
+  
+    fetch(`${API_BASE}/expenses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newExp),
+    })
+      .then((res) => res.json())
+      .then((inserted) => {
+        setExpenses((prev) => [...prev, toCamelExpense(inserted)]);
+        toast({
+          title: "✅ Expense Added",
+          description: `₹${amount} on ${type}`,
+        });
+        setChatInput("");
+        setShowChatToAdd(false);
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+        toast({ title: "Error saving", variant: "destructive" });
+      });
+  };
 
 
   const toCamelTrip = (t: any): TripTemplate => ({
@@ -629,9 +739,16 @@ const TrackExpenses = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-          <h1 className="text-2xl font-bold text-blue-600 flex items-center">
-            Travel Budget Tracker
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+            <h1 className="text-2xl font-bold text-blue-600">
+              {selectedTrip ? selectedTrip.tripName : "Travel Budget Tracker"}
+            </h1>
+            {selectedTrip && (
+              <span className="text-sm text-gray-600 font-medium mt-1 sm:mt-0 sm:ml-4 px-2 py-1 bg-gray-100 rounded">
+                📅 {format(new Date(selectedTrip.startDate), "MMM d")} – {format(new Date(selectedTrip.endDate), "MMM d, yyyy")}
+              </span>
+            )}
+          </div>
         </div>
       </header>
       <main className="max-w-7xl mx-auto p-6 space-y-6">
@@ -738,17 +855,29 @@ const TrackExpenses = () => {
                     + Add Expense
                   </Button>
                   <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
-                    Export Excel
+                   📄 Export Excel
                   </Button>
                   <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
-                    Export PDF
+                   📄 Export PDF
                   </Button>
                   <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    View Activities
+                   🕘 View Activities
                   </Button>
-                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-green-600 text-white hover:bg-green-700">
+                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-green-600 text-white hover:bg-blue-700">
                     {showSettlement ? "Hide Settlement" : "Settle"}
                   </Button>
+                  <Button
+                    onClick={() => setShowSettlement(!showSettlement)}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    {showSettlement ? "Hide Settlement" : "Settle"}
+                  </Button>
+                  <Button
+                    onClick={() => setShowChatToAdd(true)}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    💬 Chat to Add
+                </Button>
                 </div>
 
                 <Card>
@@ -864,6 +993,42 @@ const TrackExpenses = () => {
         )}
       </main>
       <Footer />
+
+      {showChatToAdd && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Chat to Add Expense</h2>
+              <Button variant="ghost" onClick={() => setShowChatToAdd(false)}>Close</Button>
+            </div>
+
+              <Textarea
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                rows={3}
+                className="w-full"
+                placeholder="Type or modify below"
+              />
+
+            <Button
+              className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => {
+                setChatInput("Spent ₹1200 on Stay as advance at Taj for everyone");
+                setShowChatToAdd(true);
+              }}
+            >
+              Template Text
+            </Button>
+
+            <Button
+              className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => handleChatExpenseSubmit()}
+            >
+              Parse & Add
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showExpenseDrawer && (
         <div className="fixed right-0 top-0 w-full sm:w-[410px] h-full bg-white shadow-lg z-50 overflow-y-auto transition-all duration-300 border-l border-gray-300">

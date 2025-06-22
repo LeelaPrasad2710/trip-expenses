@@ -973,7 +973,7 @@ const TrackExpenses = () => {
                                   const share = selectedTrip.budget / selectedTrip.members.length;
                                   const delta = +(share - memberTotal).toFixed(2);
                                   return (
-                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-green-600" : "text-red-600"}`}>
+                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-blue-600" : "text-red-600"}`}>
                                       {delta >= 0 ? `+₹${delta.toFixed(2)}` : `-₹${Math.abs(delta).toFixed(2)}`}
                                     </TableCell>
                                   );

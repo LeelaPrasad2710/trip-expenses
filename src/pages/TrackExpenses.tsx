@@ -765,620 +765,547 @@ const TrackExpenses = () => {
   };
 
 
+
+  // ─── REDESIGNED UI ────────────────────────────────────────────────────────
+  const statCard = (label: string, value: string, accent: string, sub?: string) => (
+    <div className="rounded-2xl p-5 flex flex-col gap-1"
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <span className="text-xs uppercase tracking-widest font-mono-custom" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span className="font-display text-2xl font-bold" style={{ color: accent }}>{value}</span>
+      {sub && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{sub}</span>}
+    </div>
+  );
+
+  const budgetPct = selectedTrip ? Math.min((totalAmount / selectedTrip.budget) * 100, 100) : 0;
+  const isOver = selectedTrip ? totalAmount > selectedTrip.budget : false;
+
+  const ActionBtn = ({ onClick, icon, label, color = 'var(--amber)' }: { onClick: () => void; icon: string; label: string; color?: string }) => (
+    <button onClick={onClick} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+      style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}
+      onMouseEnter={e => (e.currentTarget.style.background = `${color}28`)}
+      onMouseLeave={e => (e.currentTarget.style.background = `${color}18`)}>
+      <span>{icon}</span> {label}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto p-4 flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+
+      {/* Header */}
+      <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-4">
+          <button onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-full"
+            style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
             <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-            <h1 className="text-2xl font-bold text-blue-600">
+          </button>
+          <div className="h-5 w-px" style={{ background: 'var(--border)' }} />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display text-xl font-semibold truncate" style={{ color: 'var(--cream)' }}>
               {selectedTrip ? selectedTrip.tripName : "Travel Budget Tracker"}
             </h1>
             {selectedTrip && (
-              <span className="text-sm text-gray-500 font-medium mt-1 sm:mt-0 sm:ml-4">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {format(new Date(selectedTrip.startDate), "MMM d")} – {format(new Date(selectedTrip.endDate), "MMM d, yyyy")}
-              </span>
+                &nbsp;·&nbsp;{selectedTrip.members.length} members
+              </p>
             )}
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
+
+      <main className="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-6">
+
+        {/* Trip selector or loading */}
         {loadingTrips ? (
-          <>
-            <LoadingSpinner />
-            <p className="text-center text-gray-500 text-lg">Loading trip data... please wait.</p>
-          </>
+          <div className="space-y-3">
+            {[1,2,3].map(n => <div key={n} className="h-16 rounded-2xl loading-skeleton" />)}
+          </div>
         ) : !selectedTrip ? (
-          <Card>
-            <CardContent>
-              <Label>Select Trip to Track:</Label>
-              <Select value={selectedTripId} onValueChange={setSelectedTripId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a trip" />
-                </SelectTrigger>
-                <SelectContent>
+          <div className="max-w-md mx-auto mt-16 fade-up">
+            <div className="rounded-2xl p-8 space-y-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div>
+                <p className="font-display text-2xl font-semibold mb-1" style={{ color: 'var(--cream)' }}>Select a Trip</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Choose a trip to start tracking expenses</p>
+              </div>
+              <div>
+                <label className="block text-xs mb-2 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Trip</label>
+                <select
+                  value={selectedTripId}
+                  onChange={(e) => setSelectedTripId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm appearance-none cursor-pointer"
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: selectedTripId ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                  <option value="">— Choose a trip —</option>
                   {tripTemplates.map((t) => (
-                    <SelectItem key={t.tripId} value={t.tripId}>
-                      {t.tripName} - {getTripStatus(t)}
-                    </SelectItem>
+                    <option key={t.tripId} value={t.tripId}>{t.tripName} · {getTripStatus(t)}</option>
                   ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+                </select>
+              </div>
+            </div>
+          </div>
+        ) : tripDetailsLoading ? (
+          <div className="space-y-3">
+            {[1,2,3].map(n => <div key={n} className="h-20 rounded-2xl loading-skeleton" />)}
+          </div>
         ) : (
-          <>
-            {selectedTripId && tripDetailsLoading ? (
-              <LoadingSpinner />
-            ) : selectedTrip ? (
-              <>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Budget vs Spend</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-4">
-                      <div>
-                        <Label className="text-sm text-gray-600">Total Budget</Label>
-                        <div className="bg-blue-50 border border-blue-200 p-3 rounded text-center">
-                          <span className="text-xl font-bold">₹{selectedTrip.budget.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-gray-600">Total Expenses</Label>
-                        <div className="bg-blue-100 border border-blue-300 p-3 rounded text-center">
-                          <span className="text-xl font-bold">₹{totalAmount.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-gray-600">Remaining Budget</Label>
-                        <div className={`border p-3 rounded text-center ${budgetRemaining >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                          <span className={`text-xl font-bold ${budgetRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            ₹{budgetRemaining.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+          <div className="fade-up space-y-6">
 
-                  <Card>
-                    <CardHeader className="bg-blue-600 text-white">
-                      <CardTitle>Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="divide-y divide-gray-200">
-                        {expenseBreakdown.map((item, index) => (
-                          <div key={item.type} className="flex justify-between items-center py-2">
-                            <span className="font-semibold text-sm text-gray-700">{item.type}</span>
-                            <div className="flex items-center space-x-4">
-                              <div className={`px-2 py-1 rounded text-white text-xs font-semibold ${index === 0 ? 'bg-blue-500' :
-                                index === 1 ? 'bg-green-500' :
-                                  index === 2 ? 'bg-red-500' :
-                                    index === 3 ? 'bg-orange-500' : 'bg-gray-500'
-                                }`}>
-                                {item.percentage}%
-                              </div>
-                              <span className="text-sm font-semibold text-right text-gray-800 w-[80px]">
-                                ₹{item.amount.toFixed(2)}
-                              </span>
-                              <span className="text-sm font-medium text-right text-gray-500 w-[40px]">
-                                {item.count}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+            {/* Stats row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {statCard("Total Budget", `₹${selectedTrip.budget.toLocaleString('en-IN')}`, 'var(--text-secondary)')}
+              {statCard("Total Spent", `₹${totalAmount.toLocaleString('en-IN', {minimumFractionDigits:2})}`, 'var(--amber)')}
+              {statCard("Remaining", `₹${Math.abs(budgetRemaining).toLocaleString('en-IN', {minimumFractionDigits:2})}`, isOver ? 'var(--red-soft)' : 'var(--sage)', isOver ? 'Over budget!' : undefined)}
+              {statCard("Expenses", `${filteredExpenses.length}`, 'var(--text-secondary)', `across ${selectedTrip.expenseTypes.length} categories`)}
+            </div>
 
-                      {totalAmount > 0 && (
-                        <div className="mt-4 text-center">
-                          <div className="text-2xl font-bold text-gray-700">
-                            ₹{totalAmount.toFixed(0)}
-                          </div>
-                          <div className="text-sm text-gray-500">Total Expenses</div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+            {/* Budget progress */}
+            <div className="rounded-2xl px-5 py-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Budget used</span>
+                <span className="text-xs font-mono-custom" style={{ color: isOver ? 'var(--red-soft)' : 'var(--amber)' }}>
+                  {Math.round((totalAmount / (selectedTrip.budget || 1)) * 100)}%
+                </span>
+              </div>
+              <div className="budget-bar">
+                <div className={`budget-bar-fill ${isOver ? 'over' : ''}`} style={{ width: `${budgetPct}%` }} />
+              </div>
+            </div>
+
+            {/* Overview breakdown */}
+            <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <h3 className="font-display text-sm font-semibold mb-4 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                Spend by Category
+              </h3>
+              <div className="space-y-3">
+                {expenseBreakdown.map((item) => (
+                  <div key={item.type}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item.type}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono-custom text-xs" style={{ color: 'var(--text-muted)' }}>{item.count} entries</span>
+                        <span className="font-mono-custom text-sm font-medium" style={{ color: 'var(--amber)' }}>
+                          ₹{item.amount.toLocaleString('en-IN', {minimumFractionDigits:2})}
+                        </span>
+                        <span className="chip chip-amber">{item.percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="budget-bar">
+                      <div className="budget-bar-fill" style={{ width: `${item.percentage}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2">
+              <ActionBtn onClick={() => setShowExpenseDrawer(true)} icon="+" label="Add Expense" color="var(--amber)" />
+              <ActionBtn onClick={() => setShowChatToAdd(true)} icon="💬" label="Chat to Add" color="var(--amber)" />
+              <ActionBtn onClick={() => setShowActivityDrawer(true)} icon="🕘" label="Logs" color="var(--text-secondary)" />
+              <ActionBtn onClick={() => setShowSettlement(!showSettlement)} icon="💸" label={showSettlement ? "Hide Settlement" : "Settle"} color="var(--sage)" />
+              <ActionBtn onClick={exportToExcel} icon="📄" label="Excel" color="var(--text-secondary)" />
+              <ActionBtn onClick={exportToPDF} icon="📄" label="PDF" color="var(--text-secondary)" />
+              <ActionBtn onClick={() => setShowSpendPerDate(!showSpendPerDate)} icon="📅" label="Spend by Date" color="var(--amber-dim)" />
+              <ActionBtn onClick={() => setShowMemberDNA(!showMemberDNA)} icon="🧬" label="Member DNA" color="var(--terracotta)" />
+            </div>
+
+            {/* Expenses Table */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+                <h3 className="font-display text-base font-semibold" style={{ color: 'var(--cream)' }}>Expense Ledger</h3>
+                <span className="chip chip-muted">{filteredExpenses.length} entries</span>
+              </div>
+              {filteredExpenses.length === 0 ? (
+                <div className="py-16 text-center">
+                  <p className="font-display text-lg mb-1" style={{ color: 'var(--text-secondary)' }}>No expenses yet</p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Add your first expense using the button above</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 sm:flex sm:space-x-4 sm:space-y-0">
-                  <Button onClick={() => setShowExpenseDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    + Add Expense
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowChatToAdd(true)}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    💬 Chat to Add
-                  </Button>
-
-                  <Button onClick={() => setShowActivityDrawer(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    🕘 Logs
-                  </Button>
-
-                  <Button onClick={() => setShowSettlement(!showSettlement)} className="bg-blue-600 text-white hover:bg-blue-700">
-                    {showSettlement ? "💸 Hide Settlement" : "💸 Settle"}
-                  </Button>
-
-                  <Button onClick={exportToExcel} className="bg-blue-600 text-white hover:bg-blue-700">
-                    📄 Excel
-                  </Button>
-
-                  <Button onClick={exportToPDF} className="bg-blue-600 text-white hover:bg-blue-700">
-                    📄 PDF
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowSpendPerDate(!showSpendPerDate)}
-                    className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  >
-                    📅 View Spend by Date
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowMemberDNA(!showMemberDNA)}
-                    className="bg-pink-600 text-white hover:bg-pink-700"
-                  >
-                    🧬 Member Spend DNA
-                  </Button>
-
-                </div>
-
-                <Card>
-                  <CardHeader className="bg-blue-600 text-white">
-                    <CardTitle>What are my expenses?</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    {filteredExpenses.length === 0 ? (
-                      <p className="text-center text-gray-500 py-8">No expenses recorded yet</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50">
-                              <TableHead>Date</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Description</TableHead>
-                              <TableHead>Total Amount</TableHead>
-                              {selectedTrip.members.map((member) => (
-                                <TableHead key={member} className="text-center">{member}</TableHead>
-                              ))}
-                              <TableHead>Added By</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredExpenses.map((expense) => (
-                              <TableRow key={expense.id}>
-                                <TableCell>{format(new Date(expense.date), "MMM dd, yyyy")}</TableCell>
-                                <TableCell>{expense.expenseType}</TableCell>
-                                <TableCell>
-                                  <div>
-                                    <div className="font-medium">{expense.expenseOption || "N/A"}</div>
-                                    {expense.description && <div className="text-xs text-gray-500">{expense.description}</div>}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="font-bold">₹{expense.amount.toFixed(2)}</TableCell>
-                                {selectedTrip.members.map((member) => (
-                                  <TableCell key={member} className="text-center">
-                                    ₹{(expense.memberAmounts[member] || 0).toFixed(2)}
-                                  </TableCell>
-                                ))}
-                                <TableCell>{expense.createdBy || "N/A"}</TableCell>
-                                <TableCell>
-                                  {expense.createdBy === user?.displayName || expense.createdBy === user?.email ? (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEditExpense(expense)}
-                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                      >
-                                        Edit
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => deleteExpense(expense.id)}
-                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <span className="text-xs text-gray-400 italic">No access</span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                            <TableRow className="bg-blue-50 font-bold">
-                              <TableCell colSpan={3} className="text-right">Total Expenses</TableCell>
-                              <TableCell>₹{totalAmount.toFixed(2)}</TableCell>
-                              {selectedTrip.members.map((member) => {
-                                const memberTotal = filteredExpenses.reduce((sum, expense) =>
-                                  sum + (expense.memberAmounts[member] || 0), 0
-                                );
-                                return (
-                                  <TableCell key={member} className="text-center font-bold">
-                                    ₹{memberTotal.toFixed(2)}
-                                  </TableCell>
-                                );
-                              })}
-                              <TableCell />
-                            </TableRow>
-                            {showSettlement && (
-                              <TableRow className="bg-yellow-50 font-semibold">
-                                <TableCell colSpan={3} className="text-right">Settlement</TableCell>
-                                <TableCell>₹{budgetRemaining.toFixed(2)}</TableCell>
-                                {selectedTrip.members.map((member, index) => {
-                                  const memberTotal = filteredExpenses.reduce(
-                                    (sum, exp) => sum + (exp.memberAmounts[member] || 0), 0
-                                  );
-                                  const share = selectedTrip.budget / selectedTrip.members.length;
-                                  const delta = +(share - memberTotal).toFixed(2);
-                                  return (
-                                    <TableCell key={index} className={`text-center ${delta > 0 ? "text-green-600" : "text-red-600"}`}>
-                                      {delta >= 0 ? `+₹${delta.toFixed(2)}` : `-₹${Math.abs(delta).toFixed(2)}`}
-                                    </TableCell>
-                                  );
-                                })}
-                                <TableCell />
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            ) : null}
-          </>
-        )}
-        <div className="space-y-6 mt-6">
-          {showSpendPerDate && (
-            <Card className="border border-indigo-200 shadow-sm">
-              <CardHeader>
-                <CardTitle>📅 Total Spent Per Date</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <ul className="space-y-2">
-                  {Object.entries(spendByDate).map(([date, total]) => (
-                    <li key={date} className="flex justify-between border-b pb-1 text-sm">
-                      <span className="text-gray-700">{date}</span>
-                      <span className="font-bold text-indigo-600">₹{total.toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {showMemberDNA && (
-            <Card className="border border-pink-200 shadow-sm">
-              <CardHeader>
-                <CardTitle>🧬 Member Spend DNA</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
+              ) : (
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Member</TableHead>
-                        {selectedTrip.expenseTypes.map((type) => (
-                          <TableHead key={type} className="text-right">{type}</TableHead>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+                        {["Date","Type","Description","Amount", ...selectedTrip.members, "By",""].map((h, i) => (
+                          <th key={i} className="px-4 py-3 text-left text-xs uppercase tracking-widest font-medium"
+                            style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
-                        <TableHead className="text-right">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredExpenses.map((exp, ri) => (
+                        <tr key={exp.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          <td className="px-4 py-3 font-mono-custom text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
+                            {format(new Date(exp.date), "MMM dd")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="chip chip-amber">{exp.expenseType}</span>
+                          </td>
+                          <td className="px-4 py-3 max-w-[180px]">
+                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{exp.expenseOption || "—"}</div>
+                            {exp.description && <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{exp.description}</div>}
+                          </td>
+                          <td className="px-4 py-3 font-mono-custom font-semibold whitespace-nowrap" style={{ color: 'var(--amber)' }}>
+                            ₹{exp.amount.toFixed(2)}
+                          </td>
+                          {selectedTrip.members.map((m) => (
+                            <td key={m} className="px-4 py-3 font-mono-custom text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                              ₹{(exp.memberAmounts[m] || 0).toFixed(2)}
+                            </td>
+                          ))}
+                          <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{exp.createdBy}</td>
+                          <td className="px-4 py-3">
+                            {(exp.createdBy === user?.displayName || exp.createdBy === user?.email) ? (
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => handleEditExpense(exp)}
+                                  className="text-xs px-2 py-1 rounded-lg transition-all"
+                                  style={{ color: 'var(--amber)', background: 'rgba(232,164,74,0.1)' }}>Edit</button>
+                                <button onClick={() => deleteExpense(exp.id)}
+                                  className="text-xs px-2 py-1 rounded-lg transition-all"
+                                  style={{ color: 'var(--red-soft)', background: 'rgba(196,82,82,0.1)' }}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* Totals row */}
+                      <tr style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}>
+                        <td colSpan={3} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-right"
+                          style={{ color: 'var(--text-muted)' }}>Total Expenses</td>
+                        <td className="px-4 py-3 font-mono-custom font-bold" style={{ color: 'var(--amber)' }}>₹{totalAmount.toFixed(2)}</td>
+                        {selectedTrip.members.map((m) => {
+                          const mt = filteredExpenses.reduce((s, e) => s + (e.memberAmounts[m] || 0), 0);
+                          return <td key={m} className="px-4 py-3 font-mono-custom text-xs text-center font-bold" style={{ color: 'var(--text-secondary)' }}>₹{mt.toFixed(2)}</td>;
+                        })}
+                        <td colSpan={2} />
+                      </tr>
+
+                      {showSettlement && (
+                        <tr style={{ background: 'rgba(122,158,126,0.06)', borderTop: '1px solid var(--border)' }}>
+                          <td colSpan={3} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-right"
+                            style={{ color: 'var(--sage)' }}>Settlement</td>
+                          <td className="px-4 py-3 font-mono-custom font-bold" style={{ color: budgetRemaining >= 0 ? 'var(--sage)' : 'var(--red-soft)' }}>
+                            {budgetRemaining >= 0 ? '+' : '-'}₹{Math.abs(budgetRemaining).toFixed(2)}
+                          </td>
+                          {selectedTrip.members.map((m) => {
+                            const mt = filteredExpenses.reduce((s, e) => s + (e.memberAmounts[m] || 0), 0);
+                            const share = selectedTrip.budget / selectedTrip.members.length;
+                            const delta = +(share - mt).toFixed(2);
+                            return (
+                              <td key={m} className="px-4 py-3 font-mono-custom text-xs text-center font-bold"
+                                style={{ color: delta >= 0 ? 'var(--sage)' : 'var(--red-soft)' }}>
+                                {delta >= 0 ? '+' : '-'}₹{Math.abs(delta).toFixed(2)}
+                              </td>
+                            );
+                          })}
+                          <td colSpan={2} />
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Spend by Date */}
+            {showSpendPerDate && (
+              <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <h3 className="font-display text-base font-semibold mb-4" style={{ color: 'var(--cream)' }}>📅 Spend by Date</h3>
+                <div className="space-y-2">
+                  {Object.entries(spendByDate).map(([date, total]) => (
+                    <div key={date} className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{date}</span>
+                      <span className="font-mono-custom text-sm font-semibold" style={{ color: 'var(--amber)' }}>₹{total.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Member DNA */}
+            {showMemberDNA && (
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <h3 className="font-display text-base font-semibold" style={{ color: 'var(--cream)' }}>🧬 Member Spend DNA</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                        <th className="px-4 py-3 text-left text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Member</th>
+                        {selectedTrip.expenseTypes.map(t => (
+                          <th key={t} className="px-4 py-3 text-right text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{t}</th>
+                        ))}
+                        <th className="px-4 py-3 text-right text-xs uppercase tracking-widest" style={{ color: 'var(--terracotta)' }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {Object.entries(memberDNA).map(([member, breakdown]) => {
                         const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
                         return (
-                          <TableRow key={member}>
-                            <TableCell className="font-semibold">{member}</TableCell>
-                            {selectedTrip.expenseTypes.map((type) => (
-                              <TableCell key={type} className="text-right">
-                                ₹{(breakdown[type] || 0).toFixed(2)}
-                              </TableCell>
+                          <tr key={member} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>{member}</td>
+                            {selectedTrip.expenseTypes.map(t => (
+                              <td key={t} className="px-4 py-3 font-mono-custom text-xs text-right" style={{ color: 'var(--text-secondary)' }}>
+                                ₹{(breakdown[t] || 0).toFixed(2)}
+                              </td>
                             ))}
-                            <TableCell className="text-right font-bold text-pink-600">₹{total.toFixed(2)}</TableCell>
-                          </TableRow>
+                            <td className="px-4 py-3 font-mono-custom text-sm text-right font-bold" style={{ color: 'var(--terracotta)' }}>
+                              ₹{total.toFixed(2)}
+                            </td>
+                          </tr>
                         );
                       })}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
       <Footer />
 
+      {/* Chat to Add Modal */}
       {showChatToAdd && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Chat to Add Expense</h2>
-              <Button variant="ghost" onClick={() => setShowChatToAdd(false)}>Close</Button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+          <div className="rounded-2xl w-full max-w-lg p-6 space-y-4 fade-up"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="flex justify-between items-center">
+              <h2 className="font-display text-xl font-semibold" style={{ color: 'var(--cream)' }}>💬 Chat to Add</h2>
+              <button onClick={() => setShowChatToAdd(false)} className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Close</button>
             </div>
-
-            <Textarea
+            <textarea
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               rows={3}
-              className="w-full"
-              placeholder="Type or modify below"
+              className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              placeholder='e.g. "Spent ₹1200 on Stay as Taj for everyone"'
             />
-
-            <Button
-              className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"
-              onClick={() => {
-                setChatInput("Spent ₹1200 on Stay as advance at Taj for everyone");
-                setShowChatToAdd(true);
-              }}
-            >
-              Template Text
-            </Button>
-
-            <Button
-              className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"
-              onClick={() => handleChatExpenseSubmit()}
-            >
-              Parse & Add
-            </Button>
+            <button onClick={() => setChatInput("Spent ₹1200 on Stay as advance at Taj for everyone")}
+              className="w-full py-2.5 rounded-xl text-sm"
+              style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+              Use Template Text
+            </button>
+            <button onClick={() => handleChatExpenseSubmit()}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: 'var(--amber)', color: '#111' }}>
+              Parse &amp; Add →
+            </button>
           </div>
         </div>
       )}
 
+      {/* Add/Edit Expense Drawer */}
       {showExpenseDrawer && (
-        <div className="fixed right-0 top-0 w-full sm:w-[410px] h-full bg-white shadow-lg z-50 overflow-y-auto transition-all duration-300 border-l border-gray-300">
-          <div className="flex justify-between items-center px-6 py-4 border-b">
-            <h2 className="text-xl font-semibold">Add New Expense</h2>
-            <Button
-              variant="ghost"
-              onClick={() => setShowExpenseDrawer(false)}
-            >
-              Close
-            </Button>
-          </div>
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowExpenseDrawer(false)} />
+          <div className="relative w-full sm:w-[420px] h-full overflow-y-auto slide-in"
+            style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--border)' }}>
+            <div className="sticky top-0 flex items-center justify-between px-6 py-4 z-10"
+              style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+              <h2 className="font-display text-lg font-semibold" style={{ color: 'var(--cream)' }}>
+                {editExpenseId ? "Edit Expense" : "New Expense"}
+              </h2>
+              <button onClick={() => setShowExpenseDrawer(false)} className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Close</button>
+            </div>
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Date */}
                 <div>
-                  <Label className="text-sm font-semibold">Expense Date *</Label>
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Date *</label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full mt-2 justify-start text-left font-normal",
-                          !expenseDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                      <button type="button" className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-left"
+                        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: expenseDate ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                        <CalendarIcon className="h-4 w-4" style={{ color: 'var(--amber)' }} />
                         {expenseDate ? format(expenseDate, "PPP") : "Pick date"}
-                      </Button>
+                      </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={expenseDate}
-                        onSelect={setExpenseDate}
-                        initialFocus
-                      />
+                    <PopoverContent className="w-auto p-0" align="start" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                      <Calendar mode="single" selected={expenseDate} onSelect={setExpenseDate} initialFocus />
                     </PopoverContent>
                   </Popover>
                 </div>
 
+                {/* Type */}
                 <div>
-                  <Label className="text-sm font-semibold">Expense Type *</Label>
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Type *</label>
                   <Select value={expenseType} onValueChange={setExpenseType}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select type" />
+                    <SelectTrigger className="w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                      <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {selectedTrip.expenseTypes.map((type, index) => (
-                        <SelectItem key={index} value={type}>
-                          {type}
-                        </SelectItem>
+                    <SelectContent style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                      {selectedTrip?.expenseTypes.map((t, i) => (
+                        <SelectItem key={i} value={t} style={{ color: 'var(--text-primary)' }}>{t}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
+                {/* Option */}
                 {expenseType && getExpenseOptions().length > 0 && (
                   <div>
-                    <Label className="text-sm font-semibold">Expense Option</Label>
+                    <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Option</label>
                     <Select value={expenseOption} onValueChange={setExpenseOption}>
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                         <SelectValue placeholder="Select option" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {getExpenseOptions().map((option, index) => (
-                          <SelectItem key={index} value={option}>
-                            {option}
-                          </SelectItem>
+                      <SelectContent style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                        {getExpenseOptions().map((o, i) => (
+                          <SelectItem key={i} value={o} style={{ color: 'var(--text-primary)' }}>{o}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )}
-              </div>
 
-              <div className="space-y-4">
+                {/* Description */}
                 <div>
-                  <Label htmlFor="description" className="text-sm font-semibold">Description</Label>
-                  <Input
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add description..."
-                    className="mt-2"
-                  />
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Description</label>
+                  <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Notes..."
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
                 </div>
 
+                {/* Location */}
                 <div>
-                  <Label htmlFor="location" className="text-sm font-semibold">Location</Label>
-                  <Input
-                    id="location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter location"
-                    className="mt-2"
-                  />
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Location</label>
+                  <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Where?"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
                 </div>
 
+                {/* Amount */}
                 <div>
-                  <Label htmlFor="amount" className="text-sm font-semibold">Total Amount *</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="flex-1"
-                      required
-                    />
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        onClick={splitAmountEqually}
-                        variant="outline"
-                        className="px-3"
-                        disabled={!amount}
-                        title="Split for all members"
-                      >
-                        <Users className="h-4 w-4" />
-                      </Button>
-                      <Popover open={showMemberSelection} onOpenChange={setShowMemberSelection}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="px-3"
-                            disabled={!amount}
-                            title="Split for custom members"
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 p-4" align="end">
-                          <div className="space-y-3">
-                            <Label className="text-sm font-semibold">Select Members for Split</Label>
-                            <div className="space-y-2">
-                              {selectedTrip.members.map((member) => (
-                                <div key={member} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={member}
-                                    checked={selectedMembersForSplit.includes(member)}
-                                    onCheckedChange={() => toggleMemberSelection(member)}
-                                  />
-                                  <Label htmlFor={member} className="text-sm">{member}</Label>
-                                </div>
-                              ))}
-                            </div>
-                            <Button
-                              onClick={splitAmongSelectedMembers}
-                              className="w-full"
-                              disabled={selectedMembersForSplit.length === 0}
-                            >
-                              Split Amount
-                            </Button>
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Total Amount *</label>
+                  <div className="flex gap-2">
+                    <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="₹0.00" required
+                      className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none font-mono-custom"
+                      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--amber)' }} />
+                    <button type="button" onClick={splitAmountEqually} disabled={!amount}
+                      className="px-3 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"
+                      style={{ background: 'rgba(232,164,74,0.12)', color: 'var(--amber)', border: '1px solid rgba(232,164,74,0.25)' }}
+                      title="Split equally">
+                      <Users className="h-4 w-4" />
+                    </button>
+                    <Popover open={showMemberSelection} onOpenChange={setShowMemberSelection}>
+                      <PopoverTrigger asChild>
+                        <button type="button" disabled={!amount}
+                          className="px-3 rounded-xl text-xs font-semibold flex items-center gap-1"
+                          style={{ background: 'rgba(122,158,126,0.12)', color: 'var(--sage)', border: '1px solid rgba(122,158,126,0.25)' }}
+                          title="Split for selected">
+                          <UserCheck className="h-4 w-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-60 p-4" align="end" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                        <div className="space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Select members</p>
+                          <div className="space-y-2">
+                            {selectedTrip?.members.map((m) => (
+                              <div key={m} className="flex items-center gap-2">
+                                <Checkbox id={`split-${m}`} checked={selectedMembersForSplit.includes(m)} onCheckedChange={() => toggleMemberSelection(m)} />
+                                <label htmlFor={`split-${m}`} className="text-sm cursor-pointer" style={{ color: 'var(--text-primary)' }}>{m}</label>
+                              </div>
+                            ))}
                           </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                          <button onClick={splitAmongSelectedMembers} disabled={!selectedMembersForSplit.length}
+                            className="w-full py-2 rounded-xl text-xs font-semibold"
+                            style={{ background: 'var(--amber)', color: '#111' }}>
+                            Split →
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    <Users className="inline h-3 w-3 mr-1" />Split for all |
-                    <UserCheck className="inline h-3 w-3 mx-1" />Split for custom members
-                  </div>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    <Users className="inline h-3 w-3" /> = equal split &nbsp;·&nbsp; <UserCheck className="inline h-3 w-3" /> = custom split
+                  </p>
                 </div>
-              </div>
 
-              <div>
-                <Label className="text-sm font-semibold">Amount per Member</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
-                  {selectedTrip.members.map((member, index) => (
-                    <div key={index}>
-                      <Label htmlFor={`member-${index}`} className="text-xs text-gray-600">
-                        {member}
-                      </Label>
-                      <Input
-                        id={`member-${index}`}
-                        type="number"
-                        step="0.01"
-                        value={memberAmounts[member] || 0}
-                        onChange={(e) => handleMemberAmountChange(member, e.target.value)}
-                        placeholder="0.00"
-                        className="mt-1"
-                      />
-                    </div>
-                  ))}
+                {/* Per-member */}
+                <div>
+                  <label className="block text-xs mb-2 uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Amount per Member</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedTrip?.members.map((m, i) => (
+                      <div key={i}>
+                        <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>{m}</label>
+                        <input type="number" step="0.01" value={memberAmounts[m] || 0}
+                          onChange={(e) => handleMemberAmountChange(m, e.target.value)} placeholder="0.00"
+                          className="w-full px-3 py-2 rounded-xl text-xs font-mono-custom outline-none"
+                          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs mt-2 font-mono-custom" style={{ color: 'var(--text-secondary)' }}>
+                    Assigned: ₹{Object.values(memberAmounts).reduce((s, v) => s + v, 0).toFixed(2)}
+                  </p>
                 </div>
-                <div className="text-sm text-gray-600 mt-2">
-                  Total assigned: ₹{Object.values(memberAmounts).reduce((sum, amt) => sum + amt, 0).toFixed(2)}
-                </div>
-              </div>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full font-semibold py-3 text-lg flex justify-center items-center ${isSubmitting
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Plus className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    {editExpenseId ? "Update Expense" : "Add Expense"}
-                  </>
-                )}
-              </Button>
-            </form>
+
+                <button type="submit" disabled={isSubmitting}
+                  className="w-full py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  style={{ background: isSubmitting ? 'var(--text-muted)' : 'var(--amber)', color: '#111', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
+                  {isSubmitting ? (
+                    <><Plus className="h-4 w-4 animate-spin" /> Saving…</>
+                  ) : (
+                    editExpenseId ? "Update Expense" : "Add Expense"
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Activity Logs Drawer */}
       {showActivityDrawer && (
-        <div className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl z-50 border-l border-gray-300 p-6 overflow-y-auto font-[Arial-ItalicMT]">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Activity Logs</h2>
-            <Button variant="ghost" onClick={() => setShowActivityDrawer(false)}>Close</Button>
-          </div>
-          <ol className="list-decimal pl-5 space-y-4 text-sm whitespace-pre-line text-gray-700">
-            {activityLogs.length === 0 ? (
-              <p className="italic text-gray-400">No activity yet.</p>
-            ) : (
-              activityLogs.map((log) => (
-                <li key={log.id}>
-                  {log.message}
-                  <div className="text-xs text-gray-500 mt-1">
-                    {log.created_by || "Unknown"} • {new Date(log.timestamp).toLocaleString()}
-                    {log.split_details && (
-                      <div className="mt-1">
-                        {Object.entries(log.split_details).map(([name, amt]) => (
-                          <div key={name} className="text-xs ml-2">🔹 {name}: ₹{amt}</div>
-                        ))}
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowActivityDrawer(false)} />
+          <div className="relative w-full sm:w-[400px] h-full overflow-y-auto slide-in"
+            style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--border)' }}>
+            <div className="sticky top-0 flex items-center justify-between px-6 py-4"
+              style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+              <h2 className="font-display text-lg font-semibold" style={{ color: 'var(--cream)' }}>Activity Logs</h2>
+              <button onClick={() => setShowActivityDrawer(false)} className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Close</button>
+            </div>
+            <div className="p-6">
+              {activityLogs.length === 0 ? (
+                <p className="text-sm italic text-center py-12" style={{ color: 'var(--text-muted)' }}>No activity yet.</p>
+              ) : (
+                <ol className="space-y-4">
+                  {activityLogs.map((log) => (
+                    <li key={log.id} className="relative pl-4" style={{ borderLeft: '2px solid var(--border)' }}>
+                      <p className="text-sm whitespace-pre-line leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{log.message}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs font-medium" style={{ color: 'var(--amber)' }}>{log.created_by}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(log.timestamp).toLocaleString()}</span>
                       </div>
-                    )}
-                  </div>
-                </li>
-              ))
-            )}
-          </ol>
+                      {log.split_details && (
+                        <div className="mt-2 space-y-0.5">
+                          {Object.entries(log.split_details).map(([name, amt]) => (
+                            <div key={name} className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <span style={{ color: 'var(--amber)' }}>·</span> {name}: ₹{amt}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

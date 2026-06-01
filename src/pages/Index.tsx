@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { PlusCircle, DollarSign, MapPin, Calendar } from "lucide-react";
+import { PlusCircle, DollarSign, Map, LogIn, LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, provider } from "@/firebase";
@@ -12,134 +11,194 @@ const Index = () => {
   const { user } = useAuth();
 
   const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("Login failed:", err);
-    }
+    try { await signInWithPopup(auth, provider); }
+    catch (err) { console.error("Login failed:", err); }
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+    try { await signOut(auth); }
+    catch (err) { console.error("Logout failed:", err); }
   };
 
+  const cards = [
+    {
+      icon: <PlusCircle className="h-6 w-6" />,
+      label: "CREATE",
+      title: "New Trip Template",
+      desc: "Set up a trip with budget, members, locations & expense categories.",
+      action: () => navigate("/create-trip"),
+      cta: "Start Planning",
+      accent: "var(--amber)",
+      num: "01",
+    },
+    {
+      icon: <DollarSign className="h-6 w-6" />,
+      label: "TRACK",
+      title: "Expenses",
+      desc: "Log spend, split bills, settle up, export reports — all in one place.",
+      action: () => navigate("/track-expenses"),
+      cta: "Open Tracker",
+      accent: "var(--sage)",
+      num: "02",
+    },
+    {
+      icon: <Map className="h-6 w-6" />,
+      label: "MANAGE",
+      title: "Trip Templates",
+      desc: "View, edit or delete your saved trip configurations.",
+      action: () => navigate("/manage-trips"),
+      cta: "Manage Trips",
+      accent: "var(--terracotta)",
+      num: "03",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-white" />
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+      {/* Top nav */}
+      <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--amber)', color: '#111' }}>
+              <span className="font-display font-bold text-sm">T</span>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Trip Expenses Manager
-            </h1>
+            <span className="font-display font-semibold tracking-wide" style={{ color: 'var(--cream)' }}>
+              Trip Expenses
+            </span>
           </div>
 
-          {/* Auth Button */}
           {user ? (
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">
-                Hello, {user.displayName}
-              </span>
-              <Button variant="outline" onClick={handleLogout}>
-                Sign Out
-              </Button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
+                <User className="h-3.5 w-3.5" style={{ color: 'var(--amber)' }} />
+                <span>{user.displayName || user.email}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition-all"
+                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--red-soft)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sign out
+              </button>
             </div>
           ) : (
-            <Button variant="outline" onClick={handleLogin}>
-              Sign in with Google
-            </Button>
+            <button
+              onClick={handleLogin}
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-full font-medium transition-all"
+              style={{ background: 'var(--amber)', color: '#111' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--amber-light)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'var(--amber)')}
+            >
+              <LogIn className="h-4 w-4" /> Sign in with Google
+            </button>
           )}
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Manage Your Travel Adventures
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Create trip templates and track expenses with ease. Plan better, spend smarter, and make unforgettable memories.
-          </p>
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-10 fade-up">
+        <div className="mb-2 flex items-center gap-2">
+          <div className="h-px w-8" style={{ background: 'var(--amber)' }} />
+          <span className="text-xs uppercase tracking-widest font-mono-custom" style={{ color: 'var(--amber)' }}>
+            Travel Finance Manager
+          </span>
         </div>
+        <h1 className="font-display text-5xl md:text-6xl font-bold leading-tight mb-4"
+          style={{ color: 'var(--cream)' }}>
+          Every journey,<br />
+          <span style={{ color: 'var(--amber)' }}>tracked beautifully.</span>
+        </h1>
+        <p className="text-lg max-w-xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Plan trips, split expenses, settle debts — without the spreadsheet chaos.
+        </p>
+      </section>
 
+      {/* Cards */}
+      <main className="max-w-6xl mx-auto px-6 pb-16 flex-1">
         {user ? (
-          // Logged-in view with cards
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Create Trip Template Card */}
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <CardContent className="p-8 relative z-10">
-                <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <PlusCircle className="h-8 w-8" />
+          <div className="grid md:grid-cols-3 gap-5 mt-4">
+            {cards.map((card, i) => (
+              <div
+                key={card.num}
+                className="group relative rounded-2xl p-6 cursor-pointer transition-all duration-300 fade-up"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  animationDelay: `${i * 0.08}s`,
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = card.accent;
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                }}
+              >
+                {/* Number */}
+                <div className="absolute top-5 right-6 font-mono-custom text-5xl font-bold select-none"
+                  style={{ color: 'var(--bg-elevated)', lineHeight: 1 }}>
+                  {card.num}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-center">Create Trip Template</h3>
-                <p className="text-blue-100 text-center mb-6">
-                  Set up a new trip with budget, locations, members, and expense categories
-                </p>
-                <Button
-                  onClick={() => navigate('/create-trip')}
-                  className="w-full bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 text-lg group-hover:scale-105 transition-transform duration-200"
-                >
-                  Start Planning
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* Track Expenses Card */}
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <CardContent className="p-8 relative z-10">
-                <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <DollarSign className="h-8 w-8" />
+                {/* Icon */}
+                <div className="h-11 w-11 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: `${card.accent}20`, color: card.accent }}>
+                  {card.icon}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-center">Track Expenses</h3>
-                <p className="text-purple-100 text-center mb-6">
-                  Log and monitor your trip expenses with detailed tracking and categorization
-                </p>
-                <Button
-                  onClick={() => navigate('/track-expenses')}
-                  className="w-full bg-white text-purple-600 hover:bg-purple-50 font-semibold py-3 text-lg group-hover:scale-105 transition-transform duration-200"
-                >
-                  Track Spending
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* Manage Trips Card */}
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <CardContent className="p-8 relative z-10">
-                <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <Calendar className="h-8 w-8" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-center">Manage Trip Templates</h3>
-                <p className="text-red-100 text-center mb-6">
-                  View, edit, or delete your existing trip templates
+                {/* Label */}
+                <div className="chip chip-muted mb-3">{card.label}</div>
+
+                {/* Title */}
+                <h2 className="font-display text-xl font-semibold mb-2" style={{ color: 'var(--cream)' }}>
+                  {card.title}
+                </h2>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                  {card.desc}
                 </p>
-                <Button
-                  onClick={() => navigate('/manage-trips')}
-                  className="w-full bg-white text-red-600 hover:bg-red-50 font-semibold py-3 text-lg group-hover:scale-105 transition-transform duration-200"
+
+                {/* CTA */}
+                <button
+                  onClick={card.action}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold tracking-wide transition-all"
+                  style={{ background: card.accent, color: '#111' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                 >
-                  Manage Trips
-                </Button>
-              </CardContent>
-            </Card>
+                  {card.cta} →
+                </button>
+              </div>
+            ))}
           </div>
         ) : (
-          // Not logged in view
-          <div className="text-center text-lg text-gray-500 mt-10">
-            Please sign in to access trip planning features.
+          /* Logged out state */
+          <div className="mt-16 flex flex-col items-center gap-6 fade-up">
+            <div className="h-20 w-20 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <LogIn className="h-8 w-8" style={{ color: 'var(--amber)' }} />
+            </div>
+            <div className="text-center">
+              <p className="font-display text-2xl mb-2" style={{ color: 'var(--cream)' }}>Sign in to continue</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                Your trip data is waiting for you.
+              </p>
+            </div>
+            <button
+              onClick={handleLogin}
+              className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all pulse-amber"
+              style={{ background: 'var(--amber)', color: '#111' }}
+            >
+              <LogIn className="h-4 w-4" /> Sign in with Google
+            </button>
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );

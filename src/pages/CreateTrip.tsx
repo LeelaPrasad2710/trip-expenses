@@ -1,6 +1,4 @@
-import { useState , useEffect} from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,10 +6,34 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Plus, X, ArrowLeft, Save } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+
+const Field = ({ label, required = false, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+  <div>
+    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+      {label} {required && <span style={{ color: 'var(--amber)' }}>*</span>}
+    </label>
+    {children}
+  </div>
+);
+
+const StyledInput = ({ ...props }) => (
+  <input
+    {...props}
+    className={`w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-1 ${props.className || ''}`}
+    style={{
+      background: 'var(--bg-elevated)',
+      border: '1px solid var(--border)',
+      color: 'var(--text-primary)',
+      // @ts-ignore
+      '--tw-ring-color': 'var(--amber)',
+    }}
+    onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--amber)'; }}
+    onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; }}
+  />
+);
 
 const CreateTrip = () => {
   const { tripId: paramTripId } = useParams();
@@ -38,460 +60,237 @@ const CreateTrip = () => {
       if (isEditMode && paramTripId) {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/trips/${paramTripId}`);
         const data = await res.json();
-  
-        setTripId(data.trip_id);
-        setTripName(data.trip_name);
-        setStartDate(new Date(data.start_date));
-        setEndDate(new Date(data.end_date));
-        setBudget(data.budget.toString());
-        setMoneyHandler(data.money_handler);
-        setLocation(data.location);
-        setExpenseTypes(data.expense_types || [""]);
-        setExpenseTypeOptions(data.expense_type_options || {});
-        setMembers(data.members || [""]);
+        setTripId(data.trip_id); setTripName(data.trip_name);
+        setStartDate(new Date(data.start_date)); setEndDate(new Date(data.end_date));
+        setBudget(data.budget.toString()); setMoneyHandler(data.money_handler);
+        setLocation(data.location); setExpenseTypes(data.expense_types || [""]);
+        setExpenseTypeOptions(data.expense_type_options || {}); setMembers(data.members || [""]);
       } else {
         const res = await fetch(`${API_BASE}/trips`);
         const trips = await res.json();
-        const lastId = trips
-          .map((trip: any) => trip.trip_id)
-          .filter((id: string) => /^TRIP-\d{3}$/.test(id))
-          .map((id: string) => parseInt(id.split("-")[1], 10))
-          .sort((a, b) => b - a)[0] || 0;
-  
-        const nextId = String(lastId + 1).padStart(3, "0");
-        setTripId(`TRIP-${nextId}`);
+        const lastId = trips.map((t: any) => t.trip_id).filter((id: string) => /^TRIP-\d{3}$/.test(id))
+          .map((id: string) => parseInt(id.split("-")[1], 10)).sort((a: number, b: number) => b - a)[0] || 0;
+        setTripId(`TRIP-${String(lastId + 1).padStart(3, "0")}`);
       }
     };
-  
     fetchTrip();
   }, [isEditMode, paramTripId]);
 
-
-  const addExpenseType = () => {
-    setExpenseTypes([...expenseTypes, ""]);
-  };
-
-  const removeExpenseType = (index: number) => {
+  const addExpenseType = () => setExpenseTypes([...expenseTypes, ""]);
+  const removeExpenseType = (i: number) => {
     if (expenseTypes.length > 1) {
-      const removedType = expenseTypes[index];
-      setExpenseTypes(expenseTypes.filter((_, i) => i !== index));
-      if (removedType) {
-        const newOptions = { ...expenseTypeOptions };
-        delete newOptions[removedType];
-        setExpenseTypeOptions(newOptions);
-      }
+      const removed = expenseTypes[i];
+      setExpenseTypes(expenseTypes.filter((_, idx) => idx !== i));
+      if (removed) { const n = { ...expenseTypeOptions }; delete n[removed]; setExpenseTypeOptions(n); }
     }
   };
-
-  const updateExpenseType = (index: number, value: string) => {
-    const oldValue = expenseTypes[index];
-    const updated = [...expenseTypes];
-    updated[index] = value;
-    setExpenseTypes(updated);
-
-    if (oldValue && oldValue !== value && expenseTypeOptions[oldValue]) {
-      const newOptions = { ...expenseTypeOptions };
-      newOptions[value] = newOptions[oldValue];
-      delete newOptions[oldValue];
-      setExpenseTypeOptions(newOptions);
+  const updateExpenseType = (i: number, v: string) => {
+    const old = expenseTypes[i]; const updated = [...expenseTypes]; updated[i] = v; setExpenseTypes(updated);
+    if (old && old !== v && expenseTypeOptions[old]) {
+      const n = { ...expenseTypeOptions }; n[v] = n[old]; delete n[old]; setExpenseTypeOptions(n);
     }
   };
-
-  
-
-  const addExpenseTypeOption = (expenseType: string) => {
-    setExpenseTypeOptions(prev => ({
-      ...prev,
-      [expenseType]: [...(prev[expenseType] || []), ""]
-    }));
-  };
-
-  const removeExpenseTypeOption = (expenseType: string, optionIndex: number) => {
-    setExpenseTypeOptions(prev => ({
-      ...prev,
-      [expenseType]: prev[expenseType]?.filter((_, i) => i !== optionIndex) || []
-    }));
-  };
-
-  const updateExpenseTypeOption = (expenseType: string, optionIndex: number, value: string) => {
-    setExpenseTypeOptions(prev => ({
-      ...prev,
-      [expenseType]: prev[expenseType]?.map((option, i) => i === optionIndex ? value : option) || []
-    }));
-  };
-
-  const addMember = () => {
-    setMembers([...members, ""]);
-  };
-
-  const removeMember = (index: number) => {
-    if (members.length > 1) {
-      setMembers(members.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateMember = (index: number, value: string) => {
-    const updated = [...members];
-    updated[index] = value;
-    setMembers(updated);
-  };
+  const addExpenseTypeOption = (t: string) => setExpenseTypeOptions(p => ({ ...p, [t]: [...(p[t] || []), ""] }));
+  const removeExpenseTypeOption = (t: string, i: number) => setExpenseTypeOptions(p => ({ ...p, [t]: p[t]?.filter((_, idx) => idx !== i) || [] }));
+  const updateExpenseTypeOption = (t: string, i: number, v: string) => setExpenseTypeOptions(p => ({ ...p, [t]: p[t]?.map((o, idx) => idx === i ? v : o) || [] }));
+  const addMember = () => setMembers([...members, ""]);
+  const removeMember = (i: number) => { if (members.length > 1) setMembers(members.filter((_, idx) => idx !== i)); };
+  const updateMember = (i: number, v: string) => { const u = [...members]; u[i] = v; setMembers(u); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
     if (!tripName || !startDate || !endDate || !budget || !moneyHandler || !location) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
+      return toast({ title: "Required fields missing", description: "Please fill all fields marked *", variant: "destructive" });
     }
-  
     setIsSubmitting(true);
-    toast({
-      title: "Submitting...",
-      description: "Please wait while we save your trip template",
-      variant: "default",
-    });
-  
     const payload = {
-      trip_id: tripId,
-      trip_name: tripName,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      budget: parseFloat(budget),
-      money_handler: moneyHandler,
-      location,
-      expense_types: expenseTypes.filter((t) => t.trim() !== ""),
-      expense_type_options: Object.fromEntries(
-        Object.entries(expenseTypeOptions).map(([key, value]) => [
-          key,
-          value.filter((v) => v.trim() !== "")
-        ])
-      ),
-      members: members.filter((m) => m.trim() !== ""),
-      created_by: user?.displayName || user?.email || "unknown"
+      trip_id: tripId, trip_name: tripName,
+      start_date: startDate.toISOString().split("T")[0], end_date: endDate.toISOString().split("T")[0],
+      budget: parseFloat(budget), money_handler: moneyHandler, location,
+      expense_types: expenseTypes.filter(t => t.trim()),
+      expense_type_options: Object.fromEntries(Object.entries(expenseTypeOptions).map(([k, v]) => [k, v.filter(x => x.trim())])),
+      members: members.filter(m => m.trim()),
+      created_by: user?.displayName || user?.email || "unknown",
     };
-  
     try {
-      const response = await fetch(
-        `${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`,
-        {
-          method: isEditMode ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (response.ok) {
-        toast({
-          title: "✅ Success",
-          description: isEditMode
-            ? "Trip template updated successfully"
-            : "Trip template created successfully",
-            variant: "default",
-            className: "bg-green-500 text-white",
-        });
-        navigate("/", { state: { forceReload: true } });
-      } else {
-        throw new Error("Failed to save trip");
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Failed to save trip template.",
-        variant: "destructive",
+      const res = await fetch(`${API_BASE}/trips${isEditMode ? `/${tripId}` : ""}`, {
+        method: isEditMode ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+      if (res.ok) {
+        toast({ title: isEditMode ? "Trip updated ✓" : "Trip created ✓", className: "bg-green-600 text-white" });
+        navigate("/", { state: { forceReload: true } });
+      } else throw new Error("Failed");
+    } catch {
+      toast({ title: "Error", description: "Failed to save trip.", variant: "destructive" });
     } finally {
-      setIsSubmitting(false); // 🟢 Stop loading state
+      setIsSubmitting(false);
     }
   };
-  
-  
+
+  const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+    <div className="mb-4">
+      <h3 className="font-display text-base font-semibold" style={{ color: 'var(--cream)' }}>{title}</h3>
+      {subtitle && <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
+    </div>
+  );
+
+  const DateBtn = ({ date, placeholder }: { date?: Date; placeholder: string }) => (
+    <button type="button" className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-left transition-all"
+      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: date ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+      <CalendarIcon className="h-4 w-4 shrink-0" style={{ color: 'var(--amber)' }} />
+      {date ? format(date, "PPP") : placeholder}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/")}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Home</span>
-            </Button>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {isEditMode ? "Update Trip Template" : "Create Trip Template"}
-            </h1>
-          </div>
+      <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+        <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-4">
+          <button onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-full"
+            style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+            <ArrowLeft className="h-4 w-4" /> Back
+          </button>
+          <div className="h-5 w-px" style={{ background: 'var(--border)' }} />
+          <h1 className="font-display text-xl font-semibold" style={{ color: 'var(--cream)' }}>
+            {isEditMode ? "Edit Trip Template" : "Create Trip Template"}
+          </h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <Card className="shadow-lg border-0">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl">Trip Template Details</CardTitle>
-          </CardHeader>
-          <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <Label htmlFor="tripId" className="text-base font-semibold">Trip ID</Label>
-                <Input
-                  id="tripId"
-                  value={tripId}
-                  readOnly
-                  className="mt-2 bg-gray-50 font-mono text-sm"
-                />
-              </div>
+      <main className="max-w-3xl mx-auto px-6 py-10">
+        <form onSubmit={handleSubmit} className="space-y-8 fade-up">
 
-              <div>
-                <Label htmlFor="tripName" className="text-base font-semibold">Trip Name *</Label>
-                <Input
-                  id="tripName"
-                  value={tripName}
-                  onChange={(e) => setTripName(e.target.value)}
-                  placeholder="Enter trip name"
-                  className="mt-2"
-                  required
-                />
-              </div>
+          {/* Section 1: Basic Info */}
+          <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <SectionHeader title="Basic Details" subtitle="Trip identity and key info" />
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="text-base font-semibold">Start Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full mt-2 justify-start text-left font-normal",
-                          !startDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP") : "Pick start date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+            <Field label="Trip ID">
+              <StyledInput value={tripId} readOnly className="font-mono-custom opacity-60 cursor-not-allowed" />
+            </Field>
+
+            <Field label="Trip Name" required>
+              <StyledInput value={tripName} onChange={(e: any) => setTripName(e.target.value)} placeholder="e.g. Goa Monsoon Trip 2025" required />
+            </Field>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <Field label="Start Date" required>
+                <Popover>
+                  <PopoverTrigger asChild><div><DateBtn date={startDate} placeholder="Pick start date" /></div></PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+              <Field label="End Date" required>
+                <Popover>
+                  <PopoverTrigger asChild><div><DateBtn date={endDate} placeholder="Pick end date" /></div></PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="pointer-events-auto"
+                      disabled={(d) => startDate ? d < startDate : false} />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <Field label="Budget (₹)" required>
+                <StyledInput type="number" value={budget} onChange={(e: any) => setBudget(e.target.value)} placeholder="e.g. 25000" required />
+              </Field>
+              <Field label="Trip Planner" required>
+                <StyledInput value={moneyHandler} onChange={(e: any) => setMoneyHandler(e.target.value)} placeholder="Who manages money?" required />
+              </Field>
+            </div>
+
+            <Field label="Location" required>
+              <StyledInput value={location} onChange={(e: any) => setLocation(e.target.value)} placeholder="e.g. Malshej Ghat, Maharashtra" required />
+            </Field>
+          </div>
+
+          {/* Section 2: Expense Types */}
+          <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <SectionHeader title="Expense Categories" subtitle="Define what types of expenses this trip will have" />
+            {expenseTypes.map((type, i) => (
+              <div key={i} className="space-y-3">
+                <div className="flex gap-2">
+                  <StyledInput value={type} onChange={(e: any) => updateExpenseType(i, e.target.value)} placeholder={`Category ${i + 1} (e.g. Food, Stay)`} className="flex-1" />
+                  {expenseTypes.length > 1 && (
+                    <button type="button" onClick={() => removeExpenseType(i)}
+                      className="h-10 w-10 rounded-xl flex items-center justify-center transition-all shrink-0"
+                      style={{ background: 'rgba(196,82,82,0.1)', color: 'var(--red-soft)', border: '1px solid rgba(196,82,82,0.2)' }}>
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-
-                <div>
-                  <Label className="text-base font-semibold">End Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full mt-2 justify-start text-left font-normal",
-                          !endDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP") : "Pick end date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        initialFocus
-                        className="pointer-events-auto"
-                        disabled={(date) => startDate ? date < startDate : false}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="budget" className="text-base font-semibold">Trip Budget *</Label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    placeholder="Enter budget amount"
-                    className="mt-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="moneyHandler" className="text-base font-semibold">Trip Planner *</Label>
-                  <Input
-                    id="moneyHandler"
-                    value={moneyHandler}
-                    onChange={(e) => setMoneyHandler(e.target.value)}
-                    placeholder="Who handles the money?"
-                    className="mt-2"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="location" className="text-base font-semibold">Trip Location *</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Enter trip location"
-                  className="mt-2"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label className="text-base font-semibold">Trip Expense Types</Label>
-                <div className="mt-2 space-y-3">
-                  {expenseTypes.map((type, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        value={type}
-                        onChange={(e) => updateExpenseType(index, e.target.value)}
-                        placeholder={`Expense type ${index + 1}`}
-                        className="flex-1"
-                      />
-                      {expenseTypes.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeExpenseType(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addExpenseType}
-                    className="flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add Expense Type</span>
-                  </Button>
-                </div>
-              </div>
-
-              {expenseTypes.filter(type => type.trim() !== "").map((expenseType) => (
-                <div key={expenseType} className="bg-gray-50 p-4 rounded-lg">
-                  <Label className="text-base font-semibold">Options for "{expenseType}"</Label>
-                  <div className="mt-2 space-y-3">
-                    {(expenseTypeOptions[expenseType] || []).map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-center space-x-2">
-                        <Input
-                          value={option}
-                          onChange={(e) => updateExpenseTypeOption(expenseType, optionIndex, e.target.value)}
-                          placeholder={`${expenseType} option ${optionIndex + 1}`}
-                          className="flex-1"
-                        />
-                        {(expenseTypeOptions[expenseType]?.length || 0) > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeExpenseTypeOption(expenseType, optionIndex)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
+                {type.trim() && (
+                  <div className="ml-4 pl-4 border-l space-y-2" style={{ borderColor: 'var(--border)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sub-options for "{type}":</p>
+                    {(expenseTypeOptions[type] || []).map((opt, oi) => (
+                      <div key={oi} className="flex gap-2">
+                        <StyledInput value={opt} onChange={(e: any) => updateExpenseTypeOption(type, oi, e.target.value)}
+                          placeholder={`${type} option ${oi + 1}`} className="flex-1" />
+                        <button type="button" onClick={() => removeExpenseTypeOption(type, oi)}
+                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addExpenseTypeOption(expenseType)}
-                      className="flex items-center space-x-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add {expenseType} Option</span>
-                    </Button>
+                    <button type="button" onClick={() => addExpenseTypeOption(type)}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
+                      style={{ color: 'var(--amber)', background: 'rgba(232,164,74,0.08)', border: '1px solid rgba(232,164,74,0.2)' }}>
+                      <Plus className="h-3.5 w-3.5" /> Add option
+                    </button>
                   </div>
-                </div>
-              ))}
-
-              <div>
-                <Label className="text-base font-semibold">Trip Members</Label>
-                <div className="mt-2 space-y-3">
-                  {members.map((member, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        value={member}
-                        onChange={(e) => updateMember(index, e.target.value)}
-                        placeholder={`Member ${index + 1} name`}
-                        className="flex-1"
-                      />
-                      {members.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeMember(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addMember}
-                    className="flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add Member</span>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="pt-6">
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className={`w-full text-white font-semibold py-3 text-lg ${isSubmitting
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Save className="mr-2 h-5 w-5 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-5 w-5" />
-                    {isEditMode ? "Update Trip Template" : "Create Trip Template"}
-                  </>
                 )}
-              </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            ))}
+            <button type="button" onClick={addExpenseType}
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl"
+              style={{ color: 'var(--amber)', background: 'rgba(232,164,74,0.08)', border: '1px solid rgba(232,164,74,0.2)' }}>
+              <Plus className="h-4 w-4" /> Add Category
+            </button>
+          </div>
+
+          {/* Section 3: Members */}
+          <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <SectionHeader title="Trip Members" subtitle="Who's coming on this trip?" />
+            {members.map((m, i) => (
+              <div key={i} className="flex gap-2">
+                <StyledInput value={m} onChange={(e: any) => updateMember(i, e.target.value)} placeholder={`Member ${i + 1} name`} className="flex-1" />
+                {members.length > 1 && (
+                  <button type="button" onClick={() => removeMember(i)}
+                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(196,82,82,0.1)', color: 'var(--red-soft)', border: '1px solid rgba(196,82,82,0.2)' }}>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={addMember}
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl"
+              style={{ color: 'var(--sage)', background: 'rgba(122,158,126,0.08)', border: '1px solid rgba(122,158,126,0.2)' }}>
+              <Plus className="h-4 w-4" /> Add Member
+            </button>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+            style={{ background: isSubmitting ? 'var(--text-muted)' : 'var(--amber)', color: '#111', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+          >
+            {isSubmitting ? (
+              <><Save className="h-4 w-4 animate-spin" /> Saving…</>
+            ) : (
+              <><Save className="h-4 w-4" /> {isEditMode ? "Update Trip Template" : "Create Trip Template"}</>
+            )}
+          </button>
+        </form>
       </main>
     </div>
   );

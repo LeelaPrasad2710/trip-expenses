@@ -1,8 +1,9 @@
 const Footer = () => (
-    <footer className="text-center text-sm text-gray-500 py-4">
-      Developed and managed by <span className="font-medium text-gray-700">LeelaPrasad RM</span>
-    </footer>
-  );
-  
-  export default Footer;
-  
+  <footer className="border-t py-6 px-4 mt-12" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+    <p className="text-center text-xs tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
+      Crafted by <span className="font-semibold" style={{ color: 'var(--amber)' }}>LeelaPrasad RM</span>
+    </p>
+  </footer>
+);
+
+export default Footer;

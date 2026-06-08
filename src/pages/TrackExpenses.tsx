@@ -145,21 +145,21 @@ const TrackExpenses = () => {
 
   const memberDNA = selectedTrip
     ? selectedTrip.members.reduce(
-      (acc, member) => {
-        acc[member] = {};
-        selectedTrip.expenseTypes.forEach((type) => {
-          const total = filteredExpenses.reduce((sum, exp) => {
-            if (exp.expenseType === type) {
-              return sum + (exp.memberAmounts[member] || 0);
-            }
-            return sum;
-          }, 0);
-          acc[member][type] = total;
-        });
-        return acc;
-      },
-      {} as Record<string, Record<string, number>>,
-    )
+        (acc, member) => {
+          acc[member] = {};
+          selectedTrip.expenseTypes.forEach((type) => {
+            const total = filteredExpenses.reduce((sum, exp) => {
+              if (exp.expenseType === type) {
+                return sum + (exp.memberAmounts[member] || 0);
+              }
+              return sum;
+            }, 0);
+            acc[member][type] = total;
+          });
+          return acc;
+        },
+        {} as Record<string, Record<string, number>>,
+      )
     : {};
 
   const handleChatExpenseSubmit = () => {
@@ -217,13 +217,13 @@ const TrackExpenses = () => {
       peopleRaw === "everyone"
         ? [...selectedTrip.members]
         : peopleRaw
-          .split(" and ")
-          .map((m) => m.trim())
-          .filter((m) =>
-            selectedTrip.members.some(
-              (mem) => mem.toLowerCase() === m.toLowerCase(),
-            ),
-          );
+            .split(" and ")
+            .map((m) => m.trim())
+            .filter((m) =>
+              selectedTrip.members.some(
+                (mem) => mem.toLowerCase() === m.toLowerCase(),
+              ),
+            );
 
     if (members.length === 0) {
       return toast({ title: "No valid members found", variant: "destructive" });
@@ -746,11 +746,12 @@ const TrackExpenses = () => {
         const logEntry =
           `${editExpenseId ? "✏️" : "🟢"} ${user?.displayName || "Someone"} ${action} expense\n` +
           `Type: ${expenseType}, Total: ₹${total}\n` +
-          `Split for all: ${!isSplitCustom}, Split for custom: ${isSplitCustom
-            ? selectedMembersForSplit
-              .map((m) => `${m}: ₹${memberAmounts[m]}`)
-              .join(", ")
-            : "false"
+          `Split for all: ${!isSplitCustom}, Split for custom: ${
+            isSplitCustom
+              ? selectedMembersForSplit
+                  .map((m) => `${m}: ₹${memberAmounts[m]}`)
+                  .join(", ")
+              : "false"
           }`;
 
         fetch(`${API_BASE}/logs`, {
@@ -837,22 +838,22 @@ const TrackExpenses = () => {
 
   const expenseBreakdown = selectedTrip
     ? selectedTrip.expenseTypes.map((type) => {
-      const typeExpenses = expenses.filter(
-        (exp) => exp.tripId === selectedTripId && exp.expenseType === type,
-      );
-      const typeTotal = typeExpenses.reduce(
-        (sum, exp) => sum + exp.amount,
-        0,
-      );
-      const percentage =
-        totalAmount > 0 ? Math.round((typeTotal / totalAmount) * 100) : 0;
-      return {
-        type,
-        amount: typeTotal,
-        percentage,
-        count: typeExpenses.length,
-      };
-    })
+        const typeExpenses = expenses.filter(
+          (exp) => exp.tripId === selectedTripId && exp.expenseType === type,
+        );
+        const typeTotal = typeExpenses.reduce(
+          (sum, exp) => sum + exp.amount,
+          0,
+        );
+        const percentage =
+          totalAmount > 0 ? Math.round((typeTotal / totalAmount) * 100) : 0;
+        return {
+          type,
+          amount: typeTotal,
+          percentage,
+          count: typeExpenses.length,
+        };
+      })
     : [];
 
   const toggleMemberSelection = (member: string) => {
@@ -915,16 +916,28 @@ const TrackExpenses = () => {
   }) => (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+      className="
+    inline-flex
+    items-center
+    gap-
+    px-4
+    py-2
+    rounded-full
+    text-sm
+    font-semibold
+    transition-all
+    duration-200
+    hover:-translate-y-0.5
+  "
       style={{
-        background: `${color}18`,
-        color,
-        border: `1px solid ${color}30`,
+        background: "var(--amber)",
+        color: "#111",
+        border: "none",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = `${color}28`)}
-      onMouseLeave={(e) => (e.currentTarget.style.background = `${color}18`)}
     >
-      <span>{icon}</span> {label}
+      {icon}
+      <span>{label}</span>
     </button>
   );
 
@@ -1064,120 +1077,146 @@ const TrackExpenses = () => {
         ) : (
           <div className="fade-up space-y-6">
             {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {statCard(
-                "Total Budget",
-                `₹${selectedTrip.budget.toLocaleString("en-IN")}`,
-                "var(--text-secondary)",
-              )}
-              {statCard(
-                "Total Spent",
-                `₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-                "var(--amber)",
-              )}
-              {statCard(
-                "Remaining",
-                `₹${Math.abs(budgetRemaining).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-                isOver ? "var(--red-soft)" : "var(--sage)",
-                isOver ? "Over budget!" : undefined,
-              )}
-              {statCard(
-                "Expenses",
-                `${filteredExpenses.length}`,
-                "var(--text-secondary)",
-                `across ${selectedTrip.expenseTypes.length} categories`,
-              )}
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* LEFT SIDE - 4 STAT CARDS */}
+              <div className="lg:col-span-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {statCard(
+                    "Total Budget",
+                    `₹${selectedTrip.budget.toLocaleString("en-IN")}`,
+                    "var(--text-secondary)",
+                  )}
 
-            {/* Budget progress */}
-            <div
-              className="rounded-2xl px-5 py-4"
-              style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span
-                  className="text-xs uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Budget used
-                </span>
-                <span
-                  className="text-xs font-mono-custom"
-                  style={{ color: isOver ? "var(--red-soft)" : "var(--amber)" }}
-                >
-                  {Math.round((totalAmount / (selectedTrip.budget || 1)) * 100)}
-                  %
-                </span>
+                  {statCard(
+                    "Total Spent",
+                    `₹${totalAmount.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}`,
+                    "var(--amber)",
+                  )}
+
+                  {statCard(
+                    "Remaining",
+                    `₹${Math.abs(budgetRemaining).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}`,
+                    isOver ? "var(--red-soft)" : "var(--sage)",
+                    isOver ? "Over budget!" : undefined,
+                  )}
+
+                  {statCard(
+                    "Expenses",
+                    `${filteredExpenses.length}`,
+                    "var(--text-secondary)",
+                    `across ${selectedTrip.expenseTypes.length} categories`,
+                  )}
+                </div>
               </div>
-              <div className="budget-bar">
+
+              {/* RIGHT SIDE */}
+              <div className="lg:col-span-8 space-y-4">
+                {/* Budget Used */}
                 <div
-                  className={`budget-bar-fill ${isOver ? "over" : ""}`}
-                  style={{ width: `${budgetPct}%` }}
-                />
-              </div>
-            </div>
+                  className="rounded-2xl px-5 py-8"
+                  style={{
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className="text-xs uppercase tracking-widest"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Budget Used
+                    </span>
 
-            {/* Overview breakdown */}
-            <div
-              className="rounded-2xl p-5"
-              style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <h3
-                className="font-display text-sm font-semibold mb-4 uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Spend by Category
-              </h3>
-              <div className="space-y-3">
-                {expenseBreakdown.map((item) => (
-                  <div key={item.type}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className="text-sm"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        {item.type}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="font-mono-custom text-xs"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {item.count} entries
-                        </span>
-                        <span
-                          className="font-mono-custom text-sm font-medium"
-                          style={{ color: "var(--amber)" }}
-                        >
-                          ₹
-                          {item.amount.toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                        <span className="chip chip-amber">
-                          {item.percentage}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="budget-bar">
-                      <div
-                        className="budget-bar-fill"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    </div>
+                    <span
+                      className="text-xs font-mono-custom"
+                      style={{
+                        color: isOver ? "var(--red-soft)" : "var(--amber)",
+                      }}
+                    >
+                      {Math.round(
+                        (totalAmount / (selectedTrip.budget || 1)) * 100,
+                      )}
+                      %
+                    </span>
                   </div>
-                ))}
+
+                  <div className="budget-bar">
+                    <div
+                      className={`budget-bar-fill ${isOver ? "over" : ""}`}
+                      style={{ width: `${budgetPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Spend By Category */}
+                <div
+                  className="rounded-2xl p-10"
+                  style={{
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <h3
+                    className="font-display text-sm font-semibold mb-4 uppercase tracking-widest"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Spend by Category
+                  </h3>
+
+                  <div className="space-y-3">
+                    {expenseBreakdown.map((item) => (
+                      <div key={item.type}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
+                            {item.type}
+                          </span>
+
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="font-mono-custom text-xs"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              {item.count} entries
+                            </span>
+
+                            <span
+                              className="font-mono-custom text-sm font-medium"
+                              style={{ color: "var(--amber)" }}
+                            >
+                              ₹
+                              {item.amount.toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+
+                            <span className="chip chip-amber">
+                              {item.percentage}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="budget-bar">
+                          <div
+                            className="budget-bar-fill"
+                            style={{ width: `${item.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               <ActionBtn
                 onClick={() => setShowExpenseDrawer(true)}
                 icon="+"
@@ -1302,8 +1341,8 @@ const TrackExpenses = () => {
                             borderBottom: "1px solid var(--border-subtle)",
                           }}
                           onMouseEnter={(e) =>
-                          (e.currentTarget.style.background =
-                            "var(--bg-elevated)")
+                            (e.currentTarget.style.background =
+                              "var(--bg-elevated)")
                           }
                           onMouseLeave={(e) =>
                             (e.currentTarget.style.background = "transparent")
@@ -1359,7 +1398,7 @@ const TrackExpenses = () => {
                           </td>
                           <td className="px-4 py-3">
                             {exp.createdBy === user?.displayName ||
-                              exp.createdBy === user?.email ? (
+                            exp.createdBy === user?.email ? (
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleEditExpense(exp)}

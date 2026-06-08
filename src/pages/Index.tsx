@@ -41,16 +41,6 @@ const Index = () => {
       accent: "var(--terracotta)",
       num: "03",
     },
-    {
-      icon: <PlusCircle className="h-6 w-6" />,
-      label: "CREATE",
-      title: "Create Blueprint",
-      desc: "Set up a trip with budget, members, locations & expense categories.",
-      action: () => navigate("/create-trip"),
-      cta: "Start Planning",
-      accent: "var(--amber)",
-      num: "01",
-    },
   ];
 
   return (

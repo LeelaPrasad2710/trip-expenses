@@ -24,7 +24,7 @@ const Index = () => {
     {
       icon: <PlusCircle className="h-6 w-6" />,
       label: "CREATE",
-      title: "New Trip Template",
+      title: "Create Blueprint",
       desc: "Set up a trip with budget, members, locations & expense categories.",
       action: () => navigate("/create-trip"),
       cta: "Start Planning",
@@ -34,7 +34,7 @@ const Index = () => {
     {
       icon: <DollarSign className="h-6 w-6" />,
       label: "TRACK",
-      title: "Expenses",
+      title: "View/Track Trip Itinerary",
       desc: "Log spend, split bills, settle up, export reports — all in one place.",
       action: () => navigate("/track-expenses"),
       cta: "Open Tracker",
@@ -44,7 +44,7 @@ const Index = () => {
     {
       icon: <Map className="h-6 w-6" />,
       label: "MANAGE",
-      title: "Trip Templates",
+      title: "View/Edit Blueprint",
       desc: "View, edit or delete your saved trip configurations.",
       action: () => navigate("/manage-trips"),
       cta: "Manage Trips",

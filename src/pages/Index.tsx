@@ -21,17 +21,7 @@ const Index = () => {
   };
 
   const cards = [
-    {
-      icon: <PlusCircle className="h-6 w-6" />,
-      label: "CREATE",
-      title: "Create Blueprint",
-      desc: "Set up a trip with budget, members, locations & expense categories.",
-      action: () => navigate("/create-trip"),
-      cta: "Start Planning",
-      accent: "var(--amber)",
-      num: "01",
-    },
-    {
+        {
       icon: <DollarSign className="h-6 w-6" />,
       label: "TRACK",
       title: "View/Track Trip Itinerary",
@@ -41,7 +31,7 @@ const Index = () => {
       accent: "var(--sage)",
       num: "02",
     },
-    {
+        {
       icon: <Map className="h-6 w-6" />,
       label: "MANAGE",
       title: "View/Edit Blueprint",
@@ -50,6 +40,16 @@ const Index = () => {
       cta: "Manage Trips",
       accent: "var(--terracotta)",
       num: "03",
+    },
+    {
+      icon: <PlusCircle className="h-6 w-6" />,
+      label: "CREATE",
+      title: "Create Blueprint",
+      desc: "Set up a trip with budget, members, locations & expense categories.",
+      action: () => navigate("/create-trip"),
+      cta: "Start Planning",
+      accent: "var(--amber)",
+      num: "01",
     },
   ];
 
